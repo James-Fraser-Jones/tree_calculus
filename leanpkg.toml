@@ -1,0 +1,8 @@
+[package]
+name = "tree_calculus"
+version = "0.1"
+lean_version = "leanprover-community/lean:3.33.0"
+path = "src"
+
+[dependencies]
+mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "e14cf589accbd72d970ef8486ca2d9c39f58c346"}
