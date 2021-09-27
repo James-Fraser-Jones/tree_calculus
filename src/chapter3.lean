@@ -22,66 +22,78 @@ namespace chapter3
   variables {α β γ : Type*}
   variables {w x y z : 𝕋}
 
-  --definition of injective binary functions
-  def binary_injective (f : α → β → γ) : Prop :=
-    (injective f) ∧ (∀ a : α, injective (f a))
-  theorem uncurry_binary_injective (f : α → β → γ) : 
-    binary_injective f ↔ injective (uncurry f) := 
-    begin
-      split,
-        rw [uncurry, injective, binary_injective, injective],
-        intros h p₁ p₂ h₂,
-        cases h,
-        have h₃ : f p₁.fst p₁.snd = f p₂.fst p₂.snd := h₂, --any way to avoid this???
-        have h₄ := h_right p₁.fst,
-        rw injective at h₄,
-        have h₅ := h_right p₂.fst,
-        rw injective at h₅,
-
-    end
-
-  example (a c : α) (b d : β) (h : a = c) (h₂ : b = d) : (a × b) = (c × d) := sorry
-
   --equational axioms
   @[simp] axiom kernel : △⬝△⬝y⬝z = y
   @[simp] axiom stem : △⬝(△⬝x)⬝y⬝z = y⬝z⬝(x⬝z)
   @[simp] axiom fork : △⬝(△⬝w⬝x)⬝y⬝z = z⬝w⬝x
 
-  --congruence axioms
-  def cong_node : node = node := rfl
-  axiom cong_app : binary_injective (⬝)
+  --congruence axioms?
 
   --define primitive combinators
-  @[simp] def K := △⬝△
-  theorem r_K : K⬝y⬝z = y := by simp
+  def K := △⬝△
+  @[simp] theorem r_K : K⬝y⬝z = y := by simp [K]
 
-  @[simp] def I := △⬝(△⬝△)⬝(△⬝△)
-  theorem r_I : I⬝x = x := by simp
+  def I := △⬝(△⬝△)⬝(△⬝△)
+  @[simp] theorem r_I : I⬝x = x := by simp [I]
 
-  @[simp] def D := △⬝(△⬝△)⬝(△⬝△⬝△)
-  theorem r_D : D⬝x⬝y⬝z = y⬝z⬝(x⬝z) := by simp
+  def D := △⬝(△⬝△)⬝(△⬝△⬝△)
+  @[simp] theorem r_D : D⬝x⬝y⬝z = y⬝z⬝(x⬝z) := by simp [D]
 
   @[simp] def d (x : 𝕋) := △⬝(△⬝x)
-  theorem d_eq_r_D : d x = D⬝x := by simp
+  theorem d_eq_r_D : d x = D⬝x := by simp [D]
 
   --derivation of S combinator
-  theorem S_exists : ∃ s : 𝕋, (s⬝x⬝y⬝z = x⬝z⬝(y⬝z)) :=
+  theorem S_exists : ∃ s : 𝕋, s⬝x⬝y⬝z = x⬝z⬝(y⬝z) :=
   begin
     split,
-    rw ←r_D,
-    apply congr_fun,
-    sorry,
-    sorry,
+      rw ←r_D,
+      apply congr,
+        apply congr,
+          refl,
+        show z = z,
+        refl,
+      conv
+        begin
+          to_rhs,
+          congr,
+          skip,
+          rw ←@r_K x y,
+        end,
+      conv
+        begin
+          to_rhs,
+          rw ←r_D,
+        end,
+      apply congr,
+        apply congr,
+          refl,
+        show y = y,
+        refl,
+      conv
+        begin
+          to_rhs,
+          congr,
+          congr,
+          rw ←@r_K D x,
+          skip, 
+          skip,
+          rw ←@r_K D x,
+        end,
+      conv
+        begin
+          to_rhs,
+          congr,
+          rw ←r_D,
+        end,
+      conv
+        begin
+          to_rhs,
+          rw ←r_D,
+        end,
   end
 
-  #check @injective
-
-  #check @congr_fun
-  example (α β : Type*) (f g : α → β) : (∀ z : α, f z = g z) → f = g := by exact funext
-  example (α β : Type*) (f g : α → β) : f = g → (∀ z : α, f z = g z) := by exact congr_fun
-
-  @[simp] def S := d(K⬝D) ⬝ (d K ⬝ (K⬝D))
-  theorem r_S : S⬝x⬝y⬝z = x⬝z⬝(y⬝z) := by simp
+  def S := d(K⬝D) ⬝ (d K ⬝ (K⬝D))
+  @[simp] theorem r_S : S⬝x⬝y⬝z = x⬝z⬝(y⬝z) := by simp [S]
 
   --define associated functions
   namespace natree
