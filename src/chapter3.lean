@@ -32,7 +32,7 @@ namespace chapter3
   cong_app comes for free from congurence of function application with equality (congr_arg2) and the fact that inductive type constructors are injective (app.inj)
   -/
   def cong_node : △ = △ := rfl
-  def cong_app : w = y ∧ x = z ↔ w ⬝ x = y ⬝ z := 
+  def cong_app : w = y ∧ x = z ↔ w ⬝ x = y ⬝ z := --this is only really a "congruence" in one direction
   begin
     split,
       intro h,

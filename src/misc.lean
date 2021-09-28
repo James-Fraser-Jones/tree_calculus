@@ -101,3 +101,44 @@ mk :: (fst : α) (snd : β fst)
 
 --congruence of equality with a binary function's arguments
 #check @congr_arg2           --a₁ = a₃ → a₂ = a₄ → f a₁ a₂ = f a₃ a₄
+
+------------------------------------------------------------------------------------------
+--Axioms: https://leanprover.github.io/theorem_proving_in_lean/axioms_and_computation.html
+
+#print axioms       --asks what axioms are available generally
+#print axioms congr --asks what axioms are used in given expression
+
+--Core Axioms:
+#check @propext           -- (a ↔ b) → a = b
+#check @quot.sound        -- r a b → quot.mk r a = quot.mk r b
+#check @classical.choice  -- nonempty α → α
+
+--Derived "Axioms":
+#check @funext            -- (∀ (x : α), f₁ x = f₂ x) → f₁ = f₂    --provable via quot.sound
+#check @em                -- ∀ (p : Prop), p ∨ ¬p                  --provable via propext, funext and classical.choice
+
+--Quotient Constants:
+#check @quot      --quotient type constructor
+#check @quot.mk   --quotient data constructor
+#check @quot.ind  --essentially states there are no empty equivalence classes in "quot r"
+#check @quot.lift --lifts a function (f : α → β) to (f' : quot r → β)
+
+/-
+"The four constants, quot, quot.mk, quot.ind, and quot.lift in and of themselves are not very strong.
+They are, like inductively defined types and the associated constructors and recursors, 
+viewed as part of the logical framework."
+-/
+
+------------------------------------------------------------------------------------------
+--Inductive Types
+
+--Constructors for Inductive types are injective and their domains are disjoint
+--This generates smallest possible equality on Inductive types, by default
+--Equality can then be exteneded using quotients
+
+inductive ex
+| fromNat : ℕ → ex
+| fromBool : bool → ex
+
+#check @ex.fromNat.inj  --ex.fromNat n₁ = ex.fromNat n₂ → n₁ = n₂
+#check @ex.fromBool.inj --ex.fromNat b₁ = ex.fromNat b₂ → b₁ = b₂
