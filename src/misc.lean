@@ -57,7 +57,7 @@ example (b : bool) : {x : bool // x = tt} := --add "b = b' →" to beginning of 
 
 #check @Exists  --produces Prop
 #check @psigma  --produces Type*
-#check @subtype --psigma with Sort u_2 = Prop
+#check @subtype --psigma with                   Sort u_2 = Prop
 #check @sigma   --psigma with Sort u_1 = Type*, Sort u_2 = Type*
 
 universes u v
@@ -83,3 +83,21 @@ mk :: (fst : α) (snd : β fst)
 --f : t → ℕ
 --and use the following tactic at the very end of your recursive function:
 --using_well_founded {rel_tac := λ _ _, `[exact ⟨_, measure_wf f⟩]}
+
+------------------------------------------------------------------------------------------
+--Various congruence theorems/definitions
+
+--generic congruence of equality with function application
+--can be used to specify congr_arg, congr_fun and congr_arg2 etc... 
+#check @congr                --f₁ = f₂ → a₁ = a₂ → f₁ a₁ = f₂ a₂
+
+--these two are inverses
+#check @congr_fun            --f₁ = f₂ → (∀ (a : α), f₁ a = f₂ a)
+#check @funext               --(∀ (a : α), f₁ a = f₂ a) → f₁ = f₂
+
+--these two are inverses (note that injective is only a property of *some* functions)
+#check @congr_arg            --a₁ = a₂ → f a₁ = f a₂
+#reduce @function.injective  --f a₁ = f a₂ → a₁ = a₂
+
+--congruence of equality with a binary function's arguments
+#check @congr_arg2           --a₁ = a₃ → a₂ = a₄ → f a₁ a₂ = f a₃ a₄

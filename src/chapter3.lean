@@ -19,15 +19,28 @@ namespace chapter3
   notation `△` := natree.node
   infixl `⬝`:60 := natree.app
 
-  variables {α β γ : Type*}
   variables {w x y z : 𝕋}
 
-  --equational axioms
+  --equational axioms (should these just be defined as a relation, seperate from equality?)
   @[simp] axiom kernel : △⬝△⬝y⬝z = y
   @[simp] axiom stem : △⬝(△⬝x)⬝y⬝z = y⬝z⬝(x⬝z)
   @[simp] axiom fork : △⬝(△⬝w⬝x)⬝y⬝z = z⬝w⬝x
 
-  --congruence axioms?
+  /- 
+  congruence "axioms"
+  cong_node comes for free from rfl,
+  cong_app comes for free from congurence of function application with equality (congr_arg2) and the fact that inductive type constructors are injective (app.inj)
+  -/
+  def cong_node : △ = △ := rfl
+  def cong_app : w = y ∧ x = z ↔ w ⬝ x = y ⬝ z := 
+  begin
+    split,
+      intro h,
+      cases h,
+      exact congr_arg2 app h_left h_right,
+    intro h,
+    exact app.inj h,
+  end
 
   --define primitive combinators
   def K := △⬝△
@@ -43,56 +56,36 @@ namespace chapter3
   theorem d_eq_r_D : d x = D⬝x := by simp [D]
 
   --derivation of S combinator
-  theorem S_exists : ∃ s : 𝕋, s⬝x⬝y⬝z = x⬝z⬝(y⬝z) :=
+  theorem S_exists : ∀ S : 𝕋, S⬝x⬝y⬝z = x⬝z⬝(y⬝z) → S = d (K⬝D) ⬝ (d K ⬝ (K⬝D)) :=
   begin
-    split,
-      rw ←r_D,
-      apply congr,
-        apply congr,
-          refl,
-        show z = z,
-        refl,
-      conv
-        begin
-          to_rhs,
-          congr,
-          skip,
-          rw ←@r_K x y,
-        end,
-      conv
-        begin
-          to_rhs,
-          rw ←r_D,
-        end,
-      apply congr,
-        apply congr,
-          refl,
-        show y = y,
-        refl,
-      conv
-        begin
-          to_rhs,
-          congr,
-          congr,
-          rw ←@r_K D x,
-          skip, 
-          skip,
-          rw ←@r_K D x,
-        end,
-      conv
-        begin
-          to_rhs,
-          congr,
-          rw ←r_D,
-        end,
-      conv
-        begin
-          to_rhs,
-          rw ←r_D,
-        end,
+    intros S h₁,
+    have h₂ : S⬝x⬝y⬝z = D⬝y⬝x⬝z, 
+    calc S⬝x⬝y⬝z = x⬝z⬝(y⬝z) : h₁
+             ... = D⬝y⬝x⬝z   : by rw ←r_D
+    ,
+    have h₃ := h₂,
+    rw ←cong_app at h₃, cases h₃ with h₃ r,                    --how can we remove r?
+    have h₄ : S⬝x⬝y = D⬝(K⬝x)⬝D⬝y,
+    calc S⬝x⬝y = D⬝y⬝x        : h₃
+           ... = D⬝y⬝(K⬝x⬝y)  : by conv {to_lhs, rw ←@r_K x y} --why is the "conv to_lhs" necessary?
+           ... = D⬝(K⬝x)⬝D⬝y  : by rw ←r_D
+    ,
+    have h₅ := h₄,
+    rw ←cong_app at h₅, cases h₅ with h₅ r,
+    have h₆ : S⬝x = D⬝(K⬝D)⬝(D⬝K⬝(K⬝D))⬝x,
+    calc S⬝x = D⬝(K⬝x)⬝D             : h₅
+         ... = (K⬝D⬝x)⬝(K⬝x)⬝(K⬝D⬝x) : by conv {to_lhs, rw ←@r_K D x}
+         ... = D⬝K⬝(K⬝D)⬝x⬝(K⬝D⬝x)   : by rw ←r_D
+         ... = D⬝(K⬝D)⬝(D⬝K⬝(K⬝D))⬝x : by rw ←r_D
+    ,
+    have h₇ := h₆,
+    rw ←cong_app at h₇, cases h₇ with h₇ r,
+    calc   S = D⬝(K⬝D)⬝(D⬝K⬝(K⬝D)) : h₇
+         ... = d (K⬝D)⬝(d K⬝(K⬝D)) : by repeat {rw ←d_eq_r_D}
+    ,
   end
 
-  def S := d(K⬝D) ⬝ (d K ⬝ (K⬝D))
+  def S := d (K⬝D) ⬝ (d K ⬝ (K⬝D))
   @[simp] theorem r_S : S⬝x⬝y⬝z = x⬝z⬝(y⬝z) := by simp [S]
 
   --define associated functions
