@@ -56,6 +56,8 @@ namespace natree
     apply quotient.sound,
     apply pre.equiv.fork,
   end
+
+  -----------------------------------------------------------------------------------
   
   #check @pre.equiv.not_inj
   --(⬝) is not injective
@@ -69,5 +71,7 @@ namespace natree
     -- repeat {rw ←quot_dist_app at h},
     sorry --use pre.equiv.not_inj somehow
   end
+
+  -----------------------------------------------------------------------------------
 
 end natree
