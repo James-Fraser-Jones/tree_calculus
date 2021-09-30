@@ -33,13 +33,18 @@ namespace chapter3
   -/
   def cong_node : △ = △ := rfl
   def cong_app : w = y ∧ x = z ↔ w ⬝ x = y ⬝ z := --this is only really a "congruence" in one direction
-  begin
+  begin                                           --also the left direction is actually *false* which means the axioms above introduce inconsistency
     split,
       intro h,
       cases h,
       exact congr_arg2 app h_left h_right,
     intro h,
     exact app.inj h,
+  end
+
+  def uhoh : false :=
+  begin
+    sorry --implement
   end
 
   --define primitive combinators
