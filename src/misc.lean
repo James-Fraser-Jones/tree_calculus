@@ -142,3 +142,29 @@ inductive ex
 
 #check @ex.fromNat.inj  --ex.fromNat n₁ = ex.fromNat n₂ → n₁ = n₂
 #check @ex.fromBool.inj --ex.fromNat b₁ = ex.fromNat b₂ → b₁ = b₂
+
+------------------------------------------------------------------------------------------
+--Initial and Terminal types for Prop and Type
+
+#check unit    --Terminal Type
+#check ()      --value of unit
+#check empty   --Initial Type
+#check @empty.elim
+
+#check true    --Terminal Prop
+#check true.intro
+#check trivial --value of true
+#check false   --Initial Prop
+#check @false.elim
+
+------------------------------------------------------------------------------------------
+--Tactics
+
+--Use "induction" tactic instead of "cases" when you need to recursively call a theorem/function
+--or use the "equation compiler" by doing ordinary pattern matching outside of a tactic block
+
+------------------------------------------------------------------------------------------
+--Congruence
+
+  --Read: https://en.wikipedia.org/wiki/Congruence_relation
+  --      https://en.wikipedia.org/wiki/Equivalence_class
