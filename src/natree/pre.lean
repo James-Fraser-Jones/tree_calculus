@@ -7,6 +7,8 @@ namespace natree
   | node : pre
   | app : pre → pre → pre
 
+  #print prefix natree.pre --show all generated defs for "pre"
+
   namespace pre
 
     notation `𝕋'` := pre
@@ -24,7 +26,9 @@ namespace natree
 
     -----------------------------------------------------------------------------------
 
+    --https://xenaproject.wordpress.com/2018/03/24/no-confusion-over-no_confusion/
     #check @pre.no_confusion --what dis? https://leanprover.github.io/theorem_proving_in_lean/induction_and_recursion.html?highlight=no_confusion
+    #check @pre.no_confusion_type
     
     lemma how : ¬ ▢ ↦ ▢ := begin --how does this work?
       intro h,
@@ -32,19 +36,9 @@ namespace natree
     end
     #print how
 
-    def reduces_to_decidable : decidable_rel (↦) := --how to prove?
-    begin
-      rw decidable_rel,
-      intros a b,
-      induction a with a₁ a₂ h₁ h₂,
-        left,
-        intro h,
-        cases h,
-      induction b with b₁ b₂ h₃ h₄,
-        cases h₁,
-          cases h₂,
-            left,
-    end
+    #reduce @decidable_rel
+    def decide_reduces_to (a b) : decidable (a ↦ b)
+    | (▢◦▢◦y◦z) (y₂) := if y = y₂ then decidable.is_true (reduces_to.kernel a) else decidable.is_false (reduces_to.kernel a)
 
     -----------------------------------------------------------------------------------
 
@@ -129,6 +123,7 @@ namespace natree
         have h₄ := h₃ h₂,
         cases h₄,
         --need reducability and equivalence to have decidable instances (then it'll be much easier)
+        --actually equivalence is almost certainly *not* decidable in general
       end
 
       #reduce to_bool (▢ ↦ ▢◦▢)
