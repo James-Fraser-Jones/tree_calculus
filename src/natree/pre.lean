@@ -2,12 +2,11 @@ import tactic
 
 namespace natree
 
+  --@[derive decidable_eq]
   --inductive structure of pre-trees (natural trees pre-quotienting)
   inductive pre 
   | node : pre
   | app : pre → pre → pre
-
-  #print prefix natree.pre --show all generated defs for "pre"
 
   namespace pre
 
@@ -15,30 +14,114 @@ namespace natree
     notation `▢` := pre.node
     infixl `◦`:60 := pre.app
 
-    --reduction rules of tree calculus, specified as an inductive binary relation on pre-trees
-    inductive reduces_to : 𝕋' → 𝕋' → Prop
-    | kernel         (y) {z} : reduces_to (▢◦   ▢   ◦y◦z) y
-    |   stem     (x) (y) (z) : reduces_to (▢◦ (▢◦x) ◦y◦z) (y◦z◦(x◦z))
-    |   fork (w) (x) {y} (z) : reduces_to (▢◦(▢◦w◦x)◦y◦z) (z◦w◦x)
-    |   left {a₁ a₂ b₁} (h : reduces_to a₁ b₁) : reduces_to (a₁ ◦ a₂) (b₁ ◦ a₂)
-    |  right {a₁ a₂ b₂} (h : reduces_to a₂ b₂) : reduces_to (a₁ ◦ a₂) (a₁ ◦ b₂)
-    infixr ` ↦ `:60 := reduces_to
-
-    -----------------------------------------------------------------------------------
-
-    --https://xenaproject.wordpress.com/2018/03/24/no-confusion-over-no_confusion/
-    #check @pre.no_confusion --what dis? https://leanprover.github.io/theorem_proving_in_lean/induction_and_recursion.html?highlight=no_confusion
-    #check @pre.no_confusion_type
-    
-    lemma how : ¬ ▢ ↦ ▢ := begin --how does this work?
+    instance decide_eq : decidable_eq 𝕋' --this is actually derivable
+    | ▢ ▢ := decidable.is_true rfl
+    | (a₁◦a₂) (b₁◦b₂) := begin
+      cases @decide_eq a₁ b₁ with h₁,
+        cases @decide_eq a₂ b₂ with h₂,
+          repeat {
+            left,
+            intro h,
+            have h₃ := app.inj h,
+            cases h₃,
+            apply h₁,
+            assumption,
+          },
+      cases @decide_eq a₂ b₂ with h₂,
+        left,
+        intro h,
+        have h₃ := app.inj h,
+        cases h₃,
+        apply h₂,
+        assumption,
+      right,
+      apply congr_arg2,
+      repeat {assumption},
+    end
+    | ▢ (b₁◦b₂) := begin
+      left,
       intro h,
       cases h,
     end
-    #print how
+    | (a₁◦a₂) ▢ := begin
+      left,
+      intro h,
+      cases h,
+    end
 
-    #reduce @decidable_rel
-    def decide_reduces_to (a b) : decidable (a ↦ b)
-    | (▢◦▢◦y◦z) (y₂) := if y = y₂ then decidable.is_true (reduces_to.kernel a) else decidable.is_false (reduces_to.kernel a)
+    --reduction rules of tree calculus, specified as an inductive binary relation on pre-trees
+    --should this actually be type instead???
+    --https://discord.com/channels/679792285910827018/707609591940382830/894343635397652500
+    inductive reduces : 𝕋' → 𝕋' → Prop
+    | kernel         (y) {z} : reduces (▢◦   ▢   ◦y◦z) y
+    |   stem     (x) (y) (z) : reduces (▢◦ (▢◦x) ◦y◦z) (y◦z◦(x◦z))
+    |   fork (w) (x) {y} (z) : reduces (▢◦(▢◦w◦x)◦y◦z) (z◦w◦x)
+    |   left {a₁ a₂ b₁} (h : reduces a₁ b₁) : reduces (a₁ ◦ a₂) (b₁ ◦ a₂)
+    |  right {a₁ a₂ b₂} (h : reduces a₂ b₂) : reduces (a₁ ◦ a₂) (a₁ ◦ b₂)
+    infixr ` ↦ `:60 := reduces
+
+    #check @inhabited
+    #check @nonempty
+
+    -----------------------------------------------------------------------------------
+
+    lemma decide_iff (a) : a ↦ ▢ ↔ ∃ z, a = (▢◦▢◦▢◦z) := begin 
+      split,
+        intro h,
+        cases h,
+        apply exists.intro,
+        refl,
+      intro h,
+      cases h,
+      rw h_h,
+      apply reduces.kernel,
+    end
+
+    def decide_reduces_to : decidable_rel (↦)
+    | (▢◦▢◦y◦z) y₂ := begin
+      sorry
+    end
+    | (▢◦(▢◦x)◦y◦z) (y₂◦z₂◦(x₂◦z₃)) := begin
+      sorry
+    end
+    | (▢◦(▢◦w◦x)◦y◦z) (z₂◦w₂◦x₂) := begin
+      sorry --works when w = w₂ ...
+    end
+    | (a₁◦a₂) (b₁◦b₂) := 
+    if h : a₁ = b₁ then 
+    begin 
+      rw h,
+      cases decide_reduces_to a₂ b₂ with h₂ h₂,
+        left,
+        intro h₃,
+        sorry,
+      sorry,
+    end 
+    else if a₂ = b₂ then 
+    sorry 
+    else 
+    sorry
+    | a ▢ :=
+    begin
+      cases a with a a₄,
+        left, intro h, cases h,
+      cases a with a a₃,
+        left, intro h, cases h,
+      cases a with a₁ a₂,
+        left, intro h, cases h,
+      by_cases h₁ : a₁ = ▢,
+        by_cases h₂ : a₂ = ▢,
+          by_cases h₃ : a₃ = ▢,
+            right, rw [h₁, h₂, h₃], apply reduces.kernel,
+          left, intro h, apply h₃, cases h, refl,
+        left, intro h, apply h₂, cases h, refl,
+      left, intro h, apply h₁, cases h, refl,
+    end
+    | ▢ b := begin
+      left,
+      intro h,
+      cases h,
+    end
 
     -----------------------------------------------------------------------------------
 
@@ -57,19 +140,19 @@ namespace natree
       theorem kernel {y z} : (▢◦▢◦y◦z) ≈ y :=
       begin
         apply lift_reduces_to,
-        apply reduces_to.kernel,
+        apply reduces.kernel,
       end
 
       theorem stem {x y z} : (▢◦(▢◦x)◦y◦z) ≈ (y◦z◦(x◦z)) :=
       begin
         apply lift_reduces_to,
-        apply reduces_to.stem,
+        apply reduces.stem,
       end
 
       theorem fork {w x y z} : (▢◦(▢◦w◦x)◦y◦z) ≈ (z◦w◦x) :=
       begin
         apply lift_reduces_to,
-        apply reduces_to.fork,
+        apply reduces.fork,
       end
 
       lemma congr_left {a₁ a₂ b₁} : a₁ ≈ b₁ → a₁◦a₂ ≈ b₁◦a₂ :=
@@ -77,7 +160,7 @@ namespace natree
         intro h,
         induction h with x y h _ x y h₁ h₂ x y z h₁ h₂ h₃ h₄,
               apply eqv_gen.rel,
-              apply reduces_to.left,
+              apply reduces.left,
               assumption,
             apply eqv_gen.refl,
           apply eqv_gen.symm,
@@ -92,7 +175,7 @@ namespace natree
         intro h,
         induction h with x y h _ x y h₁ h₂ x y z h₁ h₂ h₃ h₄,
               apply eqv_gen.rel,
-              apply reduces_to.right,
+              apply reduces.right,
               assumption,
             apply eqv_gen.refl,
           apply eqv_gen.symm,
@@ -114,7 +197,12 @@ namespace natree
 
       -----------------------------------------------------------------------------------
 
-      --(◦) is not injective modulo equivalence
+      --I believe this requires confluence to prove in the transitive case
+      lemma hmm : ¬ ▢ ≈ ▢◦▢ := begin
+        sorry
+      end
+
+      --(◦) is *not* injective modulo equivalence
       theorem not_inj : ¬ (∀ {a₁ a₂ b₁ b₂}, a₁◦a₂ ≈ b₁◦b₂ → a₁ ≈ b₁ ∧ a₂ ≈ b₂) :=
       begin
         intro h₁,
@@ -122,12 +210,9 @@ namespace natree
         have h₃ := @h₁ (▢◦(▢◦▢)◦▢) ▢ (▢◦▢) (▢◦▢),
         have h₄ := h₃ h₂,
         cases h₄,
-        --need reducability and equivalence to have decidable instances (then it'll be much easier)
-        --actually equivalence is almost certainly *not* decidable in general
+        apply hmm,
+        assumption,
       end
-
-      #reduce to_bool (▢ ↦ ▢◦▢)
-      #check @app.inj
 
       -----------------------------------------------------------------------------------
 

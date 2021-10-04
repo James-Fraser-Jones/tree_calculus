@@ -61,7 +61,7 @@ namespace natree
   
   #check @pre.equiv.not_inj
   --(⬝) is not injective
-  theorem not_inj {a₁ a₂ b₁ b₂} : a₁⬝a₂ = b₁⬝b₂ → ¬ (a₁ = b₁ ∧ a₂ = b₂) :=
+  theorem not_inj : ¬ (∀ {a₁ a₂ b₁ b₂}, a₁⬝a₂ = b₁⬝b₂ → a₁ = b₁ ∧ a₂ = b₂) :=
   begin
     -- intro h,
     -- have h₁ := quotient.exists_rep a₁, cases h₁ with a₁' h₁, rw ←h₁, rw ←h₁ at h,

@@ -48,7 +48,7 @@ example (b : bool) : {x : bool // x = tt} := --add "b = b' →" to beginning of 
   @bool.rec_on 
     (λ b', b = b' → {x : bool // x = tt})
     b
-    (λ _, ⟨tt, rfl⟩)
+    (λ h, ⟨tt, rfl⟩)
     (λ h, ⟨b, h⟩) --now we can use our "h : b = tt"
 ) rfl
 
@@ -168,3 +168,7 @@ inductive ex
 
   --Read: https://en.wikipedia.org/wiki/Congruence_relation
   --      https://en.wikipedia.org/wiki/Equivalence_class
+
+------------------------------------------------------------------------------------------
+--Universe Lifting
+#check ulift
