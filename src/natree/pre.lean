@@ -2,8 +2,8 @@ import tactic
 
 namespace natree
 
-  --@[derive decidable_eq]
   --inductive structure of pre-trees (natural trees pre-quotienting)
+  @[derive decidable_eq]
   inductive pre 
   | node : pre
   | app : pre → pre → pre
@@ -14,70 +14,25 @@ namespace natree
     notation `▢` := pre.node
     infixl `◦`:60 := pre.app
 
-    instance decide_eq : decidable_eq 𝕋' --this is actually derivable
-    | ▢ ▢ := decidable.is_true rfl
-    | (a₁◦a₂) (b₁◦b₂) := begin
-      cases @decide_eq a₁ b₁ with h₁,
-        cases @decide_eq a₂ b₂ with h₂,
-          repeat {
-            left,
-            intro h,
-            have h₃ := app.inj h,
-            cases h₃,
-            apply h₁,
-            assumption,
-          },
-      cases @decide_eq a₂ b₂ with h₂,
-        left,
-        intro h,
-        have h₃ := app.inj h,
-        cases h₃,
-        apply h₂,
-        assumption,
-      right,
-      apply congr_arg2,
-      repeat {assumption},
-    end
-    | ▢ (b₁◦b₂) := begin
-      left,
-      intro h,
-      cases h,
-    end
-    | (a₁◦a₂) ▢ := begin
-      left,
-      intro h,
-      cases h,
-    end
-
     --reduction rules of tree calculus, specified as an inductive binary relation on pre-trees
-    --should this actually be type instead???
-    --https://discord.com/channels/679792285910827018/707609591940382830/894343635397652500
     inductive reduces : 𝕋' → 𝕋' → Prop
     | kernel         (y) {z} : reduces (▢◦   ▢   ◦y◦z) y
     |   stem     (x) (y) (z) : reduces (▢◦ (▢◦x) ◦y◦z) (y◦z◦(x◦z))
     |   fork (w) (x) {y} (z) : reduces (▢◦(▢◦w◦x)◦y◦z) (z◦w◦x)
-    |   left {a₁ a₂ b₁} (h : reduces a₁ b₁) : reduces (a₁ ◦ a₂) (b₁ ◦ a₂)
-    |  right {a₁ a₂ b₂} (h : reduces a₂ b₂) : reduces (a₁ ◦ a₂) (a₁ ◦ b₂)
+    |   left {a₁ a₂ b₁} (h : reduces a₁ b₁) : reduces (a₁◦a₂) (b₁◦a₂)
+    |  right {a₁ a₂ b₂} (h : reduces a₂ b₂) : reduces (a₁◦a₂) (a₁◦b₂)
     infixr ` ↦ `:60 := reduces
 
-    #check @inhabited
-    #check @nonempty
+    #check fintype --use instead of decidable for Types
+    #check nonempty --use to collapse a Type into a Prop
+
+    example {a b} : a ↦ b := begin
+      mapply reduces.stem,
+    end
 
     -----------------------------------------------------------------------------------
 
-    lemma decide_iff (a) : a ↦ ▢ ↔ ∃ z, a = (▢◦▢◦▢◦z) := begin 
-      split,
-        intro h,
-        cases h,
-        apply exists.intro,
-        refl,
-      intro h,
-      cases h,
-      rw h_h,
-      apply reduces.kernel,
-    end
-
-    def decide_reduces_to : decidable_rel (↦)
+    def decide_reduces : decidable_rel (↦)
     | (▢◦▢◦y◦z) y₂ := begin
       sorry
     end
@@ -90,8 +45,8 @@ namespace natree
     | (a₁◦a₂) (b₁◦b₂) := 
     if h : a₁ = b₁ then 
     begin 
-      rw h,
-      cases decide_reduces_to a₂ b₂ with h₂ h₂,
+      rw ←h,
+      cases decide_reduces a₂ b₂ with h₂ h₂,
         left,
         intro h₃,
         sorry,
@@ -121,6 +76,12 @@ namespace natree
       left,
       intro h,
       cases h,
+    end
+
+    example {a₁ a₂ b₁ b₂} : a₁◦a₂ ↦ b₁◦b₂ ↔ a₁ ↦ b₁ ∧ a₂ = b₂ ∨ a₁ = b₁ ∧ a₂ ↦ b₂ := begin
+      split,
+        intro h,
+        cases h,
     end
 
     -----------------------------------------------------------------------------------

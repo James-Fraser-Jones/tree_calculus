@@ -91,11 +91,11 @@ mk :: (fst : α) (snd : β fst)
 --can be used to specify congr_arg, congr_fun and congr_arg2 etc... 
 #check @congr                --f₁ = f₂ → a₁ = a₂ → f₁ a₁ = f₂ a₂
 
---these two are inverses
+--these two are converses
 #check @congr_fun            --f₁ = f₂ → (∀ (a : α), f₁ a = f₂ a)
 #check @funext               --(∀ (a : α), f₁ a = f₂ a) → f₁ = f₂
 
---these two are inverses (note that injective is only a property of *some* functions)
+--these two are converses (note that injective is only a property of *some* functions)
 #check @congr_arg            --a₁ = a₂ → f a₁ = f a₂
 #reduce @function.injective  --f a₁ = f a₂ → a₁ = a₂
 
@@ -172,3 +172,15 @@ inductive ex
 ------------------------------------------------------------------------------------------
 --Universe Lifting
 #check ulift
+
+------------------------------------------------------------------------------------------
+--Useful Links:
+/-
+vscode abbreviations: https://github.com/leanprover/vscode-lean/blob/master/src/abbreviation/abbreviations.json
+lean community version github: https://github.com/leanprover-community/lean
+lean community website: https://leanprover-community.github.io/
+mathlib docs: https://leanprover-community.github.io/mathlib_docs/
+theorem proving in lean: https://leanprover.github.io/theorem_proving_in_lean/
+lean reference manual: https://leanprover.github.io/reference/
+logic and proof: https://leanprover.github.io/logic_and_proof/
+-/
