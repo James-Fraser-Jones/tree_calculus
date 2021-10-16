@@ -38,12 +38,14 @@ namespace chapter2
   
   inductive roman 
   | I | V | X | L | C | D | M
-  | app : roman → roman → roman
+  | add : roman → roman → roman
 
   namespace roman
 
-    infixl `⬝`:60 := app
-
+    instance : has_one roman := ⟨I⟩
+    instance : has_add roman := ⟨add⟩
+    infixl `⬝`:60 := (+)
+    
     inductive eq_r : roman → roman → Prop
     --equivalence relation
     | refl (r) : eq_r r r
@@ -62,7 +64,23 @@ namespace chapter2
     | opD : eq_r (D) (C⬝C⬝C⬝C⬝C)
     | opM : eq_r (M) (D⬝D)
 
-    infixl ` =ᵣ `:50 := eq_r
+    namespace eq_r
+
+      infixl ` =ᵣ `:50 := eq_r
+
+      @[refl]
+      lemma has_refl (r) : r =ᵣ r := 
+      by apply refl
+
+      @[symm]
+      lemma has_symm {r₁ r₂} (h : r₁ =ᵣ r₂) : r₂ =ᵣ r₁ := 
+      by {apply symm, assumption}
+
+      @[trans]
+      lemma has_trans {r₁ r₂ r₃} (h₁ : r₁ =ᵣ r₂) (h₂ : r₂ =ᵣ r₃) : r₁ =ᵣ r₃ := 
+      by {apply trans, exact h₁, assumption}
+
+    end eq_r
 
   end roman
 
@@ -75,6 +93,8 @@ namespace chapter2
 
   namespace arith
 
+    instance : has_zero arith := ⟨zero⟩
+    instance : has_add arith := ⟨add⟩
     infixl ` + `:60 := add
 
     inductive eq_a : arith → arith → Prop
@@ -89,7 +109,22 @@ namespace chapter2
     | add_zero (a) : eq_a (zero + a) a
     | add_succ (a₁ a₂) : eq_a (succ a₁ + a₂) (succ (a₁ + a₂))
 
-    infixl ` =ₐ `:50 := eq_a
+    namespace eq_a
+      infixl ` =ₐ `:50 := eq_a
+
+      @[refl]
+      lemma has_refl (a : arith) : a =ₐ a := --why do we need to specify type here?
+      by apply refl
+
+      @[symm]
+      lemma has_symm {a₁ a₂ : arith} (h : a₁ =ₐ a₂) : a₂ =ₐ a₁ := 
+      by {apply symm, assumption}
+
+      @[trans]
+      lemma has_trans {a₁ a₂ a₃ : arith} (h₁ : a₁ =ₐ a₂) (h₂ : a₂ =ₐ a₃) : a₁ =ₐ a₃ := 
+      by {apply trans, exact h₁, assumption}
+
+    end eq_a
 
   end arith
 
@@ -103,14 +138,14 @@ namespace chapter2
 
   --Theorems introduced in this chapter:
 
-  example (m n : numeral) : ∃ (p : numeral), m.val + n.val =ₐ p.val := begin
+  theorem thm1 (m n : numeral) : ∃ (p : numeral), m.val + n.val =ₐ p.val := begin
     cases m with m hₘ,
     induction hₘ,
-    case is_numeral.zero { --m = 0
+    case is_numeral.zero {
       split,
         apply arith.eq_a.add_zero,
     },
-    case is_numeral.succ : m' hₘ' h { --m = succ m'
+    case is_numeral.succ : m' hₘ' h {
       cases h with p' hₚ,
       split,
         show numeral,
@@ -123,7 +158,54 @@ namespace chapter2
           apply arith.eq_a.add_succ,
       apply arith.eq_a.congr_succ,
       assumption,
-    }, 
+    },
+  end
+
+  theorem thm2 (a : arith) : ∃ (n : numeral), a =ₐ n.val := begin
+    induction a,
+    case zero {
+      split,
+        show numeral,
+        split,
+          apply is_numeral.zero,
+      apply eq_a.refl,
+    },
+    case succ : a h {
+      cases h with n h,
+      split,
+        show numeral,
+        split,
+          apply is_numeral.succ,
+          exact n.property,
+      dsimp only,
+      apply arith.eq_a.congr_succ,
+      assumption,
+    },
+    case add : a₁ a₂ h₁ h₂ {
+      cases h₁ with n₁ h₁,
+      cases h₂ with n₂ h₂,
+      have h₃ := thm1 n₁ n₂,
+      cases h₃ with p h,
+      split,
+        transitivity,
+          apply arith.eq_a.congr_add,
+                assumption,
+              assumption,
+          assumption,
+    },
+  end
+
+  theorem thm3 (m n : numeral) : succ m.val + n.val =ₐ succ (m.val + n.val) := begin
+    cases m with m hₘ,
+    induction hₘ,
+    case zero {
+      dsimp only,
+      apply arith.eq_a.add_succ,
+    },
+    case succ : m' hₘ' h {
+      dsimp only at *,
+      apply arith.eq_a.add_succ,
+    }
   end
 
 end chapter2
