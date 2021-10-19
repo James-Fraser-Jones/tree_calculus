@@ -296,11 +296,45 @@ namespace chapter2
       refl,
     },
     case succ : n₁' hn₁' h {
-      calc
-        succ n₁' + n₂.val + n₃.val = succ (n₁' + n₂.val) + n₃.val : sorry
-        ...                        = succ (n₁' + n₂.val) + n₃.val : sorry
-        ...                        = n₁'.succ + (n₂.val + n₃.val) : sorry
+      transitivity,
+        apply arith.eq_a.congr_add,
+              apply arith.eq_a.succ_add,
+          refl,
+      transitivity,
+        apply arith.eq_a.succ_add,
+      transitivity,
+        apply arith.eq_a.congr_succ,
+          assumption,
+      symmetry,
+      transitivity,
+        apply arith.eq_a.succ_add,
+      refl,
     },
+  end
+
+  --6
+  theorem add_assoc (a₁ a₂ a₃ : arith) : (a₁ + a₂) + a₃ =ₐ a₁ + (a₂ + a₃) := begin
+    have h₁ := arith_to_numeral a₁,
+    cases h₁ with n₁ h₁,
+    have h₂ := arith_to_numeral a₂,
+    cases h₂ with n₂ h₂,
+    have h₃ := arith_to_numeral a₃,
+    cases h₃ with n₃ h₃,
+    transitivity,
+      apply arith.eq_a.congr_add,
+            apply arith.eq_a.congr_add,
+                assumption,
+            assumption,
+        assumption,
+    symmetry,
+    transitivity,
+      apply arith.eq_a.congr_add,
+            assumption,
+        apply arith.eq_a.congr_add, 
+            assumption,
+        assumption,
+    symmetry,
+    apply numeral_add_assoc,
   end
 
 end chapter2
