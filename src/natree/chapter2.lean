@@ -106,8 +106,8 @@ namespace chapter2
     | congr_succ {a₁ a₂} (h : eq_a a₁ a₂) : eq_a (succ a₁) (succ a₂)
     | congr_add {a₁ a₂ a₃ a₄} (h₁ : eq_a a₁ a₃) (h₂ : eq_a a₂ a₄) : eq_a (a₁ + a₂) (a₃ + a₄)
     --characterization of addition
-    | add_zero (a) : eq_a (zero + a) a
-    | add_succ (a₁ a₂) : eq_a (succ a₁ + a₂) (succ (a₁ + a₂))
+    | zero_add (a) : eq_a (zero + a) a
+    | succ_add (a₁ a₂) : eq_a (succ a₁ + a₂) (succ (a₁ + a₂))
 
     namespace eq_a
       infixl ` =ₐ `:50 := eq_a
@@ -138,12 +138,13 @@ namespace chapter2
 
   --Theorems introduced in this chapter:
 
-  theorem thm1 (m n : numeral) : ∃ (p : numeral), m.val + n.val =ₐ p.val := begin
+  --1
+  theorem numeral_add_closure (m n : numeral) : ∃ (p : numeral), m.val + n.val =ₐ p.val := begin
     cases m with m hₘ,
     induction hₘ,
     case is_numeral.zero {
       split,
-        apply arith.eq_a.add_zero,
+        apply arith.eq_a.zero_add,
     },
     case is_numeral.succ : m' hₘ' h {
       cases h with p' hₚ,
@@ -155,20 +156,21 @@ namespace chapter2
         apply is_numeral.succ,
         exact p'.property,
       apply arith.eq_a.trans,
-          apply arith.eq_a.add_succ,
+          apply arith.eq_a.succ_add,
       apply arith.eq_a.congr_succ,
       assumption,
     },
   end
 
-  theorem thm2 (a : arith) : ∃ (n : numeral), a =ₐ n.val := begin
+  --2
+  theorem arith_to_numeral (a : arith) : ∃ (n : numeral), a =ₐ n.val := begin
     induction a,
     case zero {
       split,
         show numeral,
         split,
           apply is_numeral.zero,
-      apply eq_a.refl,
+      apply arith.eq_a.refl,
     },
     case succ : a h {
       cases h with n h,
@@ -184,7 +186,7 @@ namespace chapter2
     case add : a₁ a₂ h₁ h₂ {
       cases h₁ with n₁ h₁,
       cases h₂ with n₂ h₂,
-      have h₃ := thm1 n₁ n₂,
+      have h₃ := numeral_add_closure n₁ n₂,
       cases h₃ with p h,
       split,
         transitivity,
@@ -195,17 +197,110 @@ namespace chapter2
     },
   end
 
-  theorem thm3 (m n : numeral) : succ m.val + n.val =ₐ succ (m.val + n.val) := begin
+  --3
+  theorem numeral_add_succ (m n : numeral) : m.val + succ n.val =ₐ succ (m.val + n.val) := begin
     cases m with m hₘ,
     induction hₘ,
     case zero {
       dsimp only,
-      apply arith.eq_a.add_succ,
+      transitivity,
+        apply arith.eq_a.zero_add,
+      apply arith.eq_a.congr_succ,
+      symmetry,
+      apply arith.eq_a.zero_add,
     },
     case succ : m' hₘ' h {
       dsimp only at *,
-      apply arith.eq_a.add_succ,
+      transitivity,
+        apply arith.eq_a.succ_add,
+      apply arith.eq_a.congr_succ,
+      symmetry,
+      transitivity,
+        apply arith.eq_a.succ_add,
+      symmetry,
+      assumption,
     }
+  end
+
+  --4
+  theorem numeral_zero_unit (n : numeral) : zero + n.val =ₐ n.val ∧ n.val + zero =ₐ n.val := begin
+    split,
+      apply arith.eq_a.zero_add,
+    cases n with n hₙ,
+    dsimp only,
+    induction hₙ,
+    case zero {
+      apply arith.eq_a.zero_add,
+    },
+    case succ : n' hₙ' h {
+      transitivity,
+        apply arith.eq_a.succ_add,
+      apply arith.eq_a.congr_succ,
+      assumption,
+    },
+  end
+
+  lemma numeral_add_comm (n₁ n₂ : numeral) : n₁.val + n₂.val =ₐ n₂.val + n₁.val := begin
+    cases n₁ with n₁ hn₁,
+    dsimp only at *,
+    induction hn₁,
+    case zero {
+      symmetry,
+      transitivity,
+        exact (numeral_zero_unit n₂).2,
+      symmetry,
+      apply arith.eq_a.zero_add,
+    },
+    case succ : n₁' hn₁' h {
+      transitivity,
+        apply arith.eq_a.succ_add,
+      transitivity,
+        apply arith.eq_a.congr_succ,
+          assumption,
+      symmetry,
+      exact numeral_add_succ n₂ ⟨n₁', hn₁'⟩,
+    } 
+  end
+
+  --5
+  theorem add_comm (a₁ a₂ : arith) : a₁ + a₂ =ₐ a₂ + a₁ := begin
+    have h₁ := arith_to_numeral a₁,
+    cases h₁ with n₁ h₁,
+    have h₂ := arith_to_numeral a₂,
+    cases h₂ with n₂ h₂,
+    transitivity,
+      apply arith.eq_a.congr_add,
+            assumption,
+        assumption,
+    symmetry,
+    transitivity,
+      apply arith.eq_a.congr_add,
+            assumption,
+        assumption,
+    symmetry,
+    apply numeral_add_comm,
+  end
+
+  lemma numeral_add_assoc (n₁ n₂ n₃ : numeral) : (n₁.val + n₂.val) + n₃.val =ₐ n₁.val + (n₂.val + n₃.val) := begin
+    cases n₁ with n₁ hn₁,
+    dsimp only at *,
+    induction hn₁,
+    case zero {
+      transitivity,
+        apply arith.eq_a.congr_add,
+              apply arith.eq_a.zero_add,
+          refl,
+      symmetry,
+      transitivity,
+        apply arith.eq_a.zero_add,
+      refl,
+    },
+    case succ : n₁' hn₁' h {
+      calc
+        succ n₁' + n₂.val + n₃.val = succ (n₁' + n₂.val) + n₃.val : sorry
+        ...                        = succ (n₁' + n₂.val) + n₃.val : sorry
+        ...                        = n₁'.succ + (n₂.val + n₃.val) : sorry
+    },
   end
 
 end chapter2
