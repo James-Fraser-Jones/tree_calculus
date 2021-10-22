@@ -2,11 +2,14 @@ namespace chapter2
 
   --Exercise 1
   /-
-  2047 =  11111111111
-  1205 =  10010110101
-   sum = 110010110100
-  
-  110010110100 = 2048 + 1024 + 128 + 32 + 16 + 4 = 3252
+  2047 = 2^10 + 2^9 + 2^8 + 2^7 + 2^6 + 2^5 + 2^4 + 2^3 + 2^2 + 2^1 + 2^0 
+       = 0b011111111111
+
+  1205 = 2^10 + 2^7 + 2^5 + 2^4 + 2^2 + 2^0
+       = 0b010010110101
+
+   sum = 0b110010110100
+       = 2^11 + 2^10 + 2^7 + 2^5 + 2^4 + 2^2 = 3252
   -/
 
   --Exercise 2
@@ -34,16 +37,18 @@ namespace chapter2
         ⊢ CCLX
   -/
 
+  --------------------------------------------------------------------
+
   --Definitions introduced in this chapter:
   
   inductive roman 
   | I | V | X | L | C | D | M
-  | add : roman → roman → roman
+  | append : roman → roman → roman
 
   namespace roman
 
     instance : has_one roman := ⟨I⟩
-    instance : has_add roman := ⟨add⟩
+    instance : has_add roman := ⟨append⟩
     infixl `⬝`:60 := (+)
     
     inductive eq_r : roman → roman → Prop
@@ -94,8 +99,8 @@ namespace chapter2
   namespace arith
 
     instance : has_zero arith := ⟨zero⟩
+    instance : has_one arith := ⟨succ zero⟩
     instance : has_add arith := ⟨add⟩
-    infixl ` + `:60 := add
 
     inductive eq_a : arith → arith → Prop
     --equivalence relation
@@ -106,7 +111,7 @@ namespace chapter2
     | congr_succ {a₁ a₂} (h : eq_a a₁ a₂) : eq_a (succ a₁) (succ a₂)
     | congr_add {a₁ a₂ a₃ a₄} (h₁ : eq_a a₁ a₃) (h₂ : eq_a a₂ a₄) : eq_a (a₁ + a₂) (a₃ + a₄)
     --characterization of addition
-    | zero_add (a) : eq_a (zero + a) a
+    | zero_add (a) : eq_a (0 + a) a
     | succ_add (a₁ a₂) : eq_a (succ a₁ + a₂) (succ (a₁ + a₂))
 
     namespace eq_a
@@ -131,7 +136,7 @@ namespace chapter2
   open arith
 
   inductive is_numeral : arith → Prop
-  | zero : is_numeral zero
+  | zero : is_numeral 0
   | succ {a} (h : is_numeral a) : is_numeral (succ a)
 
   def numeral := {a : arith // is_numeral a}
@@ -223,7 +228,7 @@ namespace chapter2
   end
 
   --4
-  theorem numeral_zero_unit (n : numeral) : zero + n.val =ₐ n.val ∧ n.val + zero =ₐ n.val := begin
+  theorem numeral_zero_unit (n : numeral) : 0 + n.val =ₐ n.val ∧ n.val + 0 =ₐ n.val := begin
     split,
       apply arith.eq_a.zero_add,
     cases n with n hₙ,
@@ -335,6 +340,78 @@ namespace chapter2
         assumption,
     symmetry,
     apply numeral_add_assoc,
+  end
+
+  --Conversion from roman numerals to arithmetic expressions
+  def c : roman → arith := begin
+    let c1 := (1 : arith),
+    let cV := c1 + c1 + c1 + c1 + c1,
+    let cX := cV + cV,
+    let cL := cX + cX + cX + cX + cX,
+    let cC := cL + cL,
+    let cD := cC + cC + cC + cC + cC,
+    let cM := cD + cD,
+    intro r,
+    induction r,
+    exact c1,
+    exact cV,
+    exact cX,
+    exact cL,
+    exact cC,
+    exact cD,
+    exact cM,
+    case roman.append : r s cr cs {
+      exact cr + cs,
+    },
+  end
+
+  --7
+  theorem congr_conversion {r s : roman} (h : r =ᵣ s) : c r =ₐ c s := begin
+    induction h,
+    case eq_r.refl {
+      refl,
+    },
+    case eq_r.symm : s r h h' {
+      symmetry,
+      assumption,
+    },
+    case eq_r.trans : r t s h₁ h₂ h₁' h₂' {
+      transitivity,
+      assumption,
+      assumption,
+    },
+    case eq_r.congr : r s r' s' h₁ h₂ h₁' h₂' {
+      transitivity,
+      apply arith.eq_a.congr_add,
+      assumption,
+      assumption,
+      refl,
+    },
+    case eq_r.assoc : r s t {
+      apply add_assoc,
+    },
+    case eq_r.comm : r s {
+      apply add_comm,
+    },
+    repeat {refl},
+  end
+
+  --------------------------------------------------------------------
+
+  --Exercise 4
+
+  example : (M⬝M⬝X⬝X⬝X⬝X⬝V⬝I⬝I) + (M⬝C⬝C⬝V) =ᵣ M⬝M⬝M⬝C⬝C⬝L⬝I⬝I := begin
+    have h₁ : (M⬝M⬝X⬝X⬝X⬝X⬝V⬝I⬝I) + (M⬝C⬝C⬝V) =ᵣ M⬝M⬝M⬝C⬝C⬝X⬝X⬝X⬝X⬝V⬝V⬝I⬝I,
+    sorry,
+    have h₂ : M⬝M⬝M⬝C⬝C⬝X⬝X⬝X⬝X⬝V⬝V⬝I⬝I =ᵣ M⬝M⬝M⬝C⬝C⬝X⬝X⬝X⬝X⬝X⬝I⬝I,
+    sorry,
+    have h₃ : M⬝M⬝M⬝C⬝C⬝X⬝X⬝X⬝X⬝X⬝I⬝I =ᵣ M⬝M⬝M⬝C⬝C⬝L⬝I⬝I,
+    sorry,
+    repeat {
+      transitivity,
+      assumption,
+    },
+    refl,
   end
 
 end chapter2
