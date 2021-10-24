@@ -51,7 +51,7 @@ namespace chapter2
 
     instance : has_one roman := ⟨I⟩
     instance : has_add roman := ⟨append⟩
-    infixl `⬝`:60 := (+)
+    infixl `⬝`:60 := append
     
     inductive eq_r : roman → roman → Prop
     --equivalence relation
@@ -401,7 +401,6 @@ namespace chapter2
   --------------------------------------------------------------------
 
   --Exercise 4
-
   example : (M⬝M⬝X⬝X⬝X⬝X⬝V⬝I⬝I) + (M⬝C⬝C⬝V) =ᵣ M⬝M⬝M⬝C⬝C⬝L⬝I⬝I := begin
     have h₀ : (M⬝M⬝X⬝X⬝X⬝X⬝V⬝I⬝I) + (M⬝C⬝C⬝V) =ᵣ M⬝M⬝X⬝X⬝X⬝X⬝V⬝I⬝I⬝M⬝C⬝C⬝V,
     transitivity, --remove rightmost
@@ -785,7 +784,7 @@ namespace chapter2
       apply roman.eq_r.opL,
     },
     repeat {refl},
-    
+
     --finally, string all existing hypotheses together
     repeat {
       transitivity,
@@ -794,6 +793,49 @@ namespace chapter2
     refl,
   end
 
-end chapter2
+  --Exercise 5
+  def one := succ 0
+  def two := succ one
+  def three := succ two
+  def four := succ three
+  example : two + two =ₐ four := begin
+    repeat {
+      transitivity,
+      apply arith.eq_a.succ_add,
+      apply arith.eq_a.congr_succ,
+    },
+    apply arith.eq_a.zero_add,
+  end
 
-#check quotient.lift
+  --Exercise 6
+  example {m n p: arith} : m + n + p =ₐ p + n + m := begin
+    --swap m and n
+    transitivity,
+    apply arith.eq_a.congr_add,
+    apply add_comm,
+    refl,
+    --swap m and p
+    transitivity,
+    apply add_assoc,
+    transitivity,
+    apply arith.eq_a.congr_add,
+    refl,
+    apply add_comm,
+    transitivity,
+    symmetry,
+    apply add_assoc,
+    --swap n and p
+    transitivity,
+    apply arith.eq_a.congr_add,
+    apply add_comm,
+    refl,
+    --done
+    refl,
+  end
+
+  --Exercise 7
+  /-
+  Need to think about this..
+  -/
+
+end chapter2
