@@ -57,14 +57,4 @@ namespace natree
     apply pre.equiv.fork,
   end
 
-  -----------------------------------------------------------------------------------
-  
-  --(⬝) is not injective
-  theorem not_inj : ¬ (∀ {a₁ a₂ b₁ b₂}, a₁⬝a₂ = b₁⬝b₂ → a₁ = b₁ ∧ a₂ = b₂) :=
-  begin
-    sorry --use pre.equiv.not_inj somehow
-  end
-
-  -----------------------------------------------------------------------------------
-
 end natree

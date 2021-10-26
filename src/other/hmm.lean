@@ -390,7 +390,7 @@ end
 
 #print xnat_no_confusion
 
---how the fuck do these theorems work?
+--how do these theorems work?
 theorem wat (n : xnat) : succ n ≠ xnat.zero := xnat_no_confusion --disjoint ranges
 theorem wat' (n : xnat) : xnat.zero ≠ succ n := xnat_no_confusion
 theorem succ_injective (m n : xnat) : succ m = succ n → m = n := xnat_no_confusion --injective
