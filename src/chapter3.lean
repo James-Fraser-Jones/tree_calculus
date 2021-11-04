@@ -141,8 +141,15 @@ namespace chapter3
 
   def D : 𝕋 := △⬝(△⬝△)⬝(△⬝△⬝△)
 
+  --d function (shorter version of D)
   def d (x : 𝕋) : 𝕋 := △⬝(△⬝x)
   lemma d_equiv_D {x} : D⬝x = d x := by simp [d, D]
+
+  --iterated application
+  def iterate : ℕ → 𝕋 → 𝕋 → 𝕋
+  | 0 a b := b
+  | (n+1) a b := a⬝(iterate n a b)
+  notation a ^ n ⬝ b := iterate n a b
 
   --derivation of the fundamental queries
   def derive_q {a b c e} : {q : 𝕋 // ∀ x, q⬝x = △⬝x⬝a⬝b⬝c⬝e} := begin
@@ -255,32 +262,209 @@ namespace chapter3
 
     --finish proof
     repeat {refl},
-    
   end
 
-  -- --structure to hold solution to query contraints using 4 arguments: f g h k
-  -- structure query_contraints
+  def bool_to_natree : bool → 𝕋
+  | tt := K
+  | ff := K⬝I
 
-  -- def bool_to_natree : bool → 𝕋
-  -- | tt := K
-  -- | ff := K⬝I
+  structure solution_property (f g h k : 𝕋) (is0 is1 is2 : bool) : Prop :=
+  (eq0 : △⬝△⬝f⬝g⬝h⬝k = bool_to_natree is0)
+  (eq1 : ∀ x, △⬝(△⬝x)⬝f⬝g⬝h⬝k = bool_to_natree is1)
+  (eq2 : ∀ x y, △⬝(△⬝x⬝y)⬝f⬝g⬝h⬝k = bool_to_natree is2)
 
-  -- def derive_query : 
-  -- {
-  --   query : bool → bool → bool → 𝕋 // 
-  --   ∀ is0 is1 is2, ∀ x y, 
-  --     (query is0 is1 is2)⬝x = bool_to_natree is0
-  --   ∧ (query is0 is1 is2)⬝(△⬝x) = bool_to_natree is1
-  --   ∧ (query is0 is1 is2)⬝(△⬝x⬝y) = bool_to_natree is2
-  -- } := begin
-  --   split,
-  --   intros is0 is1 is2 x y,
-  --   split,
+  lemma k2 {a b c} : (K^2⬝a)⬝b⬝c = a := begin
+    --rewrite in terms of derive_K.val
+    repeat {rw iterate},
+    have h : K = derive_K.val := rfl,
+    rw h,
 
-  -- end
+    --remove c
+    transitivity,
+    apply congr,
+    apply congr,
+    refl,
 
-  def query (ker ste for x : 𝕋) : 𝕋 := △⬝x⬝(K⬝(K⬝ker))⬝(K⬝(K⬝(K⬝(K⬝for))))⬝ste⬝ste
-  example {x y : 𝕋} : query (K⬝I) (K⬝I) (K) (△) = K⬝I := by simp [K, I, query]
-  example {x y : 𝕋} : query (K⬝I) (K⬝I) (K) (△⬝x) = K⬝I := by simp [K, I, query]
-  example {x y : 𝕋} : query (K⬝I) (K⬝I) (K) (△⬝x⬝y) = K := by simp [K, I, query]
+    --simplify using K-rule
+    apply derive_K.property,
+    refl,
+
+    --simplify using K-rule again
+    apply derive_K.property,
+  end
+
+  lemma k4 {a b c d e} : (K^4⬝a)⬝b⬝c⬝d⬝e = a := begin
+    --rewrite in terms of derive_K.val
+    repeat {rw iterate},
+    have h : K = derive_K.val := rfl,
+    rw h,
+
+    --remove c, d and e
+    transitivity,
+    apply congr,
+    apply congr,
+    refl,
+    apply congr,
+    apply congr,
+    refl,
+    apply congr,
+    apply congr,
+    refl,
+
+    --simplify using K-rule
+    apply derive_K.property,
+    refl,
+    refl,
+    refl,
+
+    --remove d and e
+    transitivity,
+    apply congr,
+    apply congr,
+    refl,
+    apply congr,
+    apply congr,
+    refl,
+
+    --simplify using K-rule
+    apply derive_K.property,
+    refl,
+    refl,
+
+    --remove e
+    transitivity,
+    apply congr,
+    apply congr,
+    refl,
+
+    --simplify using K-rule
+    apply derive_K.property,
+    refl,
+
+    --simplify using K-rule again
+    apply derive_K.property,
+  end
+
+  lemma kI {a b} : K⬝I⬝a⬝b = b := begin
+    transitivity,
+    apply congr,
+    apply congr,
+    refl,
+    have h : K = derive_K.val := rfl,
+    show K⬝I⬝a = I,
+    rw h,
+    apply derive_K.property,
+    refl,
+    have h₂ : I = derive_I.val := rfl,
+    rw h₂,
+    apply derive_I.property,
+  end
+
+  def prove_query :  ∀ is0 is1 is2, Σ f g h, {k // solution_property f g h k is0 is1 is2} := begin
+    --intros
+    intros is0 is1 is2,
+    
+    --apply naive solution for f (K^2⬝(bool_to_natree is0))
+    split,
+    show 𝕋,
+    exact K^2⬝(bool_to_natree is0), 
+
+    --apply naive solution for g (K^4⬝(bool_to_natree is2))
+    split,
+    show 𝕋,
+    exact K^4⬝(bool_to_natree is2),
+
+    --apply derived solution for h (bool_to_natree is1)
+    split,
+    show 𝕋,
+    exact bool_to_natree is1,
+
+    --apply derived solution for k (bool_to_natree is1)
+    split,
+    show 𝕋,
+    exact bool_to_natree is1,
+
+    split,
+
+    ---------------------------------------------
+    
+    --remove h and k
+    transitivity,
+    apply congr,
+    apply congr,
+    refl,
+    apply congr,
+    apply congr,
+    refl,
+
+    --use kernel rule
+    apply kernel,
+    refl,
+    refl,
+
+    --use k2
+    apply k2,
+
+    ---------------------------------------------
+
+    intro x,
+
+    --remove h and k
+    transitivity,
+    apply congr,
+    apply congr,
+    refl,
+    apply congr,
+    apply congr,
+    refl,
+
+    --use stem rule and k2
+    transitivity,
+    apply stem,
+    apply k2,
+    refl,
+    refl,
+
+    --split on cases
+    cases is0,
+
+    --case false
+    rw bool_to_natree,
+    apply kI,
+
+    --case true
+    rw bool_to_natree,
+    have h : K = derive_K.val := rfl,
+    rw h,
+    apply derive_K.property,
+
+    ---------------------------------------------
+
+    intros x y,
+
+    --remove h and k
+    transitivity,
+    apply congr,
+    apply congr,
+    refl,
+    apply congr,
+    apply congr,
+    refl,
+
+    --use fork rule and k4
+    transitivity,
+    apply fork,
+    refl,
+    refl,
+    refl,
+    apply k4,
+  end
+
+  def S : 𝕋 := (d (K⬝D))⬝((d K)⬝(K⬝D))
+  lemma S_prop {x y z} : S⬝x⬝y⬝z = x⬝z⬝(y⬝z) := by simp [S, d, D, K]
+
+  --D in terms of K and S
+  def D' : 𝕋 := △⬝(△⬝(K⬝S))⬝(△⬝(△⬝(△⬝(△⬝K)⬝(K⬝△)))⬝(K⬝△))
+  example {x y z} : D'⬝x⬝y⬝z = y⬝z⬝(x⬝z) := by simp [D', S, d, D, K]
+
 end chapter3
