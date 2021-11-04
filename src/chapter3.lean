@@ -360,10 +360,7 @@ namespace chapter3
     apply derive_I.property,
   end
 
-  def prove_query :  ∀ is0 is1 is2, Σ f g h, {k // solution_property f g h k is0 is1 is2} := begin
-    --intros
-    intros is0 is1 is2,
-    
+  def prove_query {is0 is1 is2} : Σ' f g h k, solution_property f g h k is0 is1 is2 := begin
     --apply naive solution for f (K^2⬝(bool_to_natree is0))
     split,
     show 𝕋,
@@ -460,11 +457,22 @@ namespace chapter3
     apply k4,
   end
 
+  --D in terms of K and S
   def S : 𝕋 := (d (K⬝D))⬝((d K)⬝(K⬝D))
   lemma S_prop {x y z} : S⬝x⬝y⬝z = x⬝z⬝(y⬝z) := by simp [S, d, D, K]
-
-  --D in terms of K and S
-  def D' : 𝕋 := △⬝(△⬝(K⬝S))⬝(△⬝(△⬝(△⬝(△⬝K)⬝(K⬝△)))⬝(K⬝△))
+  
+  def D' : 𝕋 := S⬝(K⬝(S⬝S))⬝K
   example {x y z} : D'⬝x⬝y⬝z = y⬝z⬝(x⬝z) := by simp [D', S, d, D, K]
+
+  --Defining fst and snd
+  def fst : 𝕋 := S⬝(K⬝(△⬝(K⬝K)⬝△))⬝△
+  example {x y} : fst⬝(△⬝x⬝y) = x := by simp [fst, S, d, D, K]
+
+  def snd : 𝕋 := S⬝(K⬝(△⬝(K⬝(K⬝I))⬝△))⬝△
+  example {x y} : snd⬝(△⬝x⬝y) = y := by simp [snd, S, d, D, K, I]
+
+  def unseat : 𝕋 := S⬝(K⬝(S⬝I))⬝K
+  example {x y} : unseat⬝x⬝y = y⬝x := by simp [unseat, S, d, D, K, I]
+  --flip⬝(b⬝x⬝y) = b⬝y⬝x
 
 end chapter3
