@@ -52,6 +52,7 @@ namespace chapter3
   --Natural Numbers
   def nat_to_natree (n) := K^n⬝△
 
+  def zero := △
   def successor := K
   def isZero := (d (K^4⬝I))⬝((d (K⬝K))⬝△)
   def predecessor := (d (K^2⬝I))⬝((d (K⬝△))⬝△)
@@ -142,16 +143,67 @@ namespace chapter3
   example : iff⬝false⬝false = true := by simp [iff, not, d, D, true, false, I, K]
 
   --Exercise 4
-  lemma first_prop {x y} : first (Pair⬝x⬝y) = x := by simp [first, Pair, I, K]
-  lemma second_prop {x y} : second (Pair⬝x⬝y) = y := by simp [second, Pair, I, K]
-
   def fst_deriv : {fst // ∀ p, fst⬝p = first p} := begin
     split,
     intro p,
     rw first,
-    --...
-    sorry,
-    sorry,
+
+    symmetry,
+    transitivity,
+    symmetry,
+    apply fork,
+    exact △,
+    symmetry,
+
+    rw ←K,
+
+    symmetry,
+    transitivity,
+    apply congr,
+    apply congr,
+    refl,
+    symmetry,
+    apply K_prop,
+    exact p,
+    refl,
+    symmetry,
+
+    symmetry,
+    transitivity,
+    symmetry,
+    apply S_prop,
+    symmetry,
+
+    apply congr,
+    apply congr,
+    refl,
+
+    repeat {refl},
   end
+  def fst := S⬝(K⬝(△⬝(K⬝K)⬝△))⬝△
+  example : fst_deriv.val = fst := rfl
+  lemma fst_prop {x y} : fst⬝(Pair⬝x⬝y) = x := by simp [fst, Pair, S, d, D, K]
+
+  def snd := S⬝(K⬝(△⬝(K⬝(K⬝I))⬝△))⬝△
+  lemma snd_prop {x y} : snd⬝(Pair⬝x⬝y) = y := by simp [snd, Pair, S, d, D, I, K]
+
+  --Exercise 5
+  lemma predecessor_prop_1 : predecessor⬝zero = zero := by simp [predecessor, zero, d, iterate, I, K]
+  lemma predecessor_prop_2 {n} : predecessor⬝(successor⬝n) = n := by simp [predecessor, successor, d, iterate, I, K]
+
+  --Exercise 6
+  --...
+
+  --Exercise 7
+  #reduce isLeaf
+  def isLeafVal := (△⬝(△⬝(△⬝△⬝(△⬝△⬝(△⬝(△⬝△)⬝(△⬝△)))))⬝(△⬝(△⬝(△⬝△⬝(△⬝△⬝(△⬝(△⬝△)⬝(△⬝△)))))⬝(△⬝(△⬝(△⬝△⬝(△⬝△⬝(△⬝△⬝(△⬝△⬝(△⬝△⬝(△⬝△⬝(△⬝(△⬝△)⬝(△⬝△)))))))))⬝(△⬝(△⬝(△⬝△⬝(△⬝△⬝(△⬝△⬝(△⬝△)))))⬝△))))
+  example : isLeafVal = isLeaf := rfl
+
+  example : isLeafVal⬝△ = true := by simp [isLeafVal, true, K]
+  example : isLeafVal⬝K = false := by simp [isLeafVal, false, K, I]
+  example : isLeafVal⬝(K⬝△) = false := by simp [isLeafVal, false, K, I]
+
+  --Exercise 8
+  --...
 
 end chapter3
