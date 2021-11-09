@@ -192,7 +192,19 @@ namespace chapter3
   lemma predecessor_prop_2 {n} : predecessor⬝(successor⬝n) = n := by simp [predecessor, successor, d, iterate, I, K]
 
   --Exercise 6
-  --...
+  def nat_to_natree' (n) := △^n⬝△
+
+  def zero' := △
+  example : nat_to_natree' 0 = zero := rfl
+
+  def successor' := △
+  example {n} : successor'⬝(nat_to_natree' n) = nat_to_natree' n.succ := rfl
+
+  def isZero' := S⬝(S⬝△⬝(K⬝K))⬝(K⬝(K⬝I))
+  example : isZero'⬝zero' = true := by simp [isZero', zero', true, S, d, D, I, K]
+  example {n} : isZero'⬝(successor'⬝n) = false := by simp [isZero', successor', false, S, d, D, I, K]
+
+  def predecessor' := sorry
 
   --Exercise 7
   #reduce isLeaf
@@ -204,6 +216,14 @@ namespace chapter3
   example : isLeafVal⬝(K⬝△) = false := by simp [isLeafVal, false, K, I]
 
   --Exercise 8
-  --...
+  /-
+  a(n) gives number of binary trees where depth <= n
+  a(1) = 1
+  a(n) = a(n-1) + a(n-1)^2 + 1
+
+  b(n) gives number of binary trees where depth = n
+  b(1) = 1
+  b(n) = a(n-1)^2 + 1
+  -/
 
 end chapter3

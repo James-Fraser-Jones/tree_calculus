@@ -475,4 +475,60 @@ namespace chapter3
   example {x y} : unseat⬝x⬝y = y⬝x := by simp [unseat, S, d, D, K, I]
   --flip⬝(b⬝x⬝y) = b⬝y⬝x
 
+  --Exercise 8
+
+  --binary trees indexed by depth
+  inductive btree : ℕ → Type
+  | kernel : btree 0
+  | stem {n} : btree n → btree (n + 1)
+  | fork {n₁ n₂} : btree n₁ → btree n₂ → btree (max n₁ n₂)
+
+  example : fintype (btree 0) := begin
+    split,
+    show finset _,
+    split,
+    show multiset _,
+    exact ⟦[btree.kernel]⟧,
+    rw multiset.nodup,
+    dsimp at *,
+  end
+
+  /-
+  https://oeis.org/A002065
+
+  Two sequences:
+
+  a_0 = 0
+  a_1 = 1
+  a(n) = a(n-1) * (a(n-1) + 2) - a(n-2) * (a(n-2) + 1)
+       = a(n-1)^2 + (2*a(n-1) - a(n-2)^2 - a(n-2))
+       = a(n-1) + a(n-1)^2 + 1
+
+  a(n) gives number of binary trees where depth <= n-1
+
+  b(0) = 0
+  b(1) = 1
+  b(n) = b(n-1) + a(n-1)^2 - a(n-2)^2
+       = b(n-1) * (a(n-1) + a(n-2)  + 1) 
+       = b(n-1) * (2a(n-1) - b(n-1) + 1)
+       = a(n) - a(n-1)
+       = a(n-1)^2 + 1
+
+  b(n) gives number of binary trees where depth = n-1
+
+  Depth 0:
+  ●
+
+  Depth 1:
+  │  ┌┴┐  
+  ●  ● ●  
+
+  Depth 2:
+  │   │   ┌┴┐  ┌┴─┐   ┌┴┐  ┌┴┐  ┌┴─┐    ┌─┴┐   ┌─┴┐   ┌─┴─┐
+  │  ┌┴┐  ● │  ● ┌┴┐  │ ●  │ │  │ ┌┴┐  ┌┴┐ ●  ┌┴┐ │  ┌┴┐ ┌┴┐
+  ●  ● ●    ●    ● ●  ●    ● ●  ● ● ●  ● ●    ● ● ●  ● ● ● ●
+   
+  ...
+  -/
+
 end chapter3
