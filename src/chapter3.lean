@@ -204,7 +204,9 @@ namespace chapter3
   example : isZero'⬝zero' = true := by simp [isZero', zero', true, S, d, D, I, K]
   example {n} : isZero'⬝(successor'⬝n) = false := by simp [isZero', successor', false, S, d, D, I, K]
 
-  def predecessor' := sorry
+  def predecessor' := S⬝(K⬝(△⬝(K⬝K)⬝△))⬝(S⬝(K⬝△)⬝(S⬝(S⬝isZero'⬝I)⬝(S⬝I⬝(K⬝△))))
+  example : predecessor'⬝zero' = zero' := by simp [predecessor', zero', isZero', S, d, D, I, K]
+  example {n} : predecessor'⬝(successor'⬝n) = n := by simp [predecessor', successor', isZero', S, d, D, I, K]
 
   --Exercise 7
   #reduce isLeaf
