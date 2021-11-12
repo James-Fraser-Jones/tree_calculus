@@ -220,11 +220,11 @@ namespace chapter3
   --Exercise 8
   /-
   a(n) gives number of binary trees where depth <= n
-  a(1) = 1
+  a(0) = 1
   a(n) = a(n-1) + a(n-1)^2 + 1
 
   b(n) gives number of binary trees where depth = n
-  b(1) = 1
+  b(0) = 1
   b(n) = a(n-1)^2 + 1
   -/
 
