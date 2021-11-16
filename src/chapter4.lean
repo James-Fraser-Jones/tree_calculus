@@ -62,14 +62,13 @@ namespace chapter4
       repeat {
         rw subst',
       },
-      sorry,
+      split_ifs,
+      apply eqv_gen.rel,
+      assumption,
+      reflexivity,
     }
   end
   
-  --ite (t = natree.pre.index x) u₁ (£ t) ≈ ite (t = natree.pre.index x) u₂ (£ t)
-  --u₁ ≈ u₂
-  --(£ t) ≈ (£ t)
-
   def subst1 : char → 𝕋' → 𝕋 → 𝕋 := λ x u, quotient.lift (λ t, ⟦subst' x u t⟧) 
   ( begin
       intros a b h,
