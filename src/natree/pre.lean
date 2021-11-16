@@ -6,12 +6,14 @@ namespace natree
   inductive pre 
   | node : pre
   | app : pre → pre → pre
+  | ref : ℕ → pre
 
   namespace pre
 
     notation `𝕋'` := pre
     notation `▢` := pre.node
     infixl `◦`:60 := pre.app
+    notation `£` := pre.ref
 
     --reduction rules of tree calculus, specified as an inductive binary relation on pre-trees
     inductive reduces : 𝕋' → 𝕋' → Prop
@@ -93,6 +95,8 @@ namespace natree
       end
 
     end equiv
+
+    def index : char → ℕ := λ c, c.val - 97
 
   end pre
 
