@@ -23,7 +23,8 @@ namespace natree
 
   theorem quot_dist_app {a b} : ⟦a ◦ b⟧ = ⟦a⟧ ⬝ ⟦b⟧ := rfl
 
-  def ref : char → 𝕋 := λ c, ⟦pre.ref (pre.index c)⟧
+  def ref : char → 𝕋 := λ c, ⟦pre.ref c⟧
+  notation `&` := ref
 
   theorem kernel {y z} : △⬝△⬝y⬝z = y := begin
     have h₁ := quotient.exists_rep y, cases h₁ with y' h₁, rw ←h₁,

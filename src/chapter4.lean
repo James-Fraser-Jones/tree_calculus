@@ -4,10 +4,8 @@ open chapter3
 
 namespace chapter4
 
-  #check natree.pre.index
-
   def subst' : char → 𝕋' → 𝕋' → 𝕋'
-  | x u (£ y) := if y = natree.pre.index x then u else £ y
+  | x u (&n y) := if y = natree.pre.index x then u else &n y
   | x u ▢ := ▢
   | x u (s◦t) := (subst' x u s) ◦ (subst' x u t)
 
@@ -123,6 +121,99 @@ namespace chapter4
     end
   )
 
+  @[simp] def kernel' {y z} : ▢◦▢◦y◦z ≈ y := natree.pre.equiv.kernel
+  @[simp] def stem' {x y z} : ▢◦(▢◦x)◦y◦z ≈ y◦z◦(x◦z) := natree.pre.equiv.stem
+  @[simp] def fork' {w x y z} : ▢◦(▢◦w◦x)◦y◦z ≈ z◦w◦x := natree.pre.equiv.fork
+
+  def K' := ▢◦▢
+  lemma K'_prop {a b} : K'◦a◦b ≈ a := by simp [K']
+
+  def I' := ▢◦K'◦K'
+  lemma I'_prop {a} : I'◦a ≈ a := 
+  begin
+    rw I',
+    rw K',
+    transitivity,
+    apply stem',
+    apply kernel',
+  end
+
+  def d' (x) := ▢◦(▢◦x)
+  lemma d'_prop {x y z} : (d' x)◦y◦z ≈ y◦z◦(x◦z) := by simp [d']
+
+  def bracket' : char → 𝕋' → 𝕋'
+  | x (&n y) := if y = natree.pre.index x then I' else K'◦(&n y)
+  | x ▢ := K'◦▢
+  | x (u◦v) := (d' (bracket' x v))◦(bracket' x u)
+  lemma bracket'_prop {x} {t} : (bracket' x t)◦(&' x) ≈ t := begin
+    induction t,
+    case node {
+      rw bracket',
+      apply K'_prop,
+    },
+    case app : t₁ t₂ h₁ h₂ {
+      rw bracket',
+      transitivity,
+      apply d'_prop,
+      apply natree.pre.equiv.congr,
+      assumption,
+      assumption,
+    },
+    case nat_ref {
+      rw bracket',
+      split_ifs,
+      transitivity,
+      apply I'_prop,
+      rw [natree.pre.ref, h],
+      apply K'_prop,
+    },
+  end
+
+  def bracket : char → 𝕋 → 𝕋 := λ x, quotient.lift (λ t, ⟦bracket' x t⟧) 
+  ( begin
+      intros a b h,
+      simp,
+      induction h,
+      case refl {
+        refl,
+      },
+      case symm {
+        symmetry,
+        assumption,
+      },
+      case trans {
+        transitivity,
+        assumption,
+        assumption,
+      },
+      case rel : t₁ t₂ h {
+        sorry
+      }
+    end
+  )
+
+  lemma bracket'_subst'_equiv {x} {t u} : (bracket' x t)◦u ≈ subst' x u t := begin
+    induction t,
+    case node {
+      rw [bracket', subst'],
+      apply K'_prop,  
+    },
+    case app : t₁ t₂ h₁ h₂ {
+      rw [bracket', subst', d'],
+      transitivity,
+      apply stem',
+      apply natree.pre.equiv.congr,
+      assumption,
+      assumption,
+    },
+    case nat_ref {
+      rw [bracket', subst'],
+      split_ifs,
+      apply I'_prop,
+      apply K'_prop,
+    },
+  end
+
   -- #reduce 'a'.val
   -- #reduce to_bool ('a' = 'b')
 
@@ -138,28 +229,28 @@ namespace chapter4
 
   -- notation λ* x, b := LamTree.lam (λ x, b)
 
-  inductive Lambda (α : Sort*) : ℕ → Sort*
-  | const (a : α) : Lambda 0
-  | lam {n} (f : α → Lambda n) : Lambda (n.succ)
+  -- inductive Lambda (α : Sort*) : ℕ → Sort*
+  -- | const (a : α) : Lambda 0
+  -- | lam {n} (f : α → Lambda n) : Lambda (n.succ)
 
-  def beta {α} {n : ℕ} : Lambda α (n.succ) → α → Lambda α n := begin
-    intros l a,
-    cases l,
-    apply l_f,
-    assumption,
-  end
+  -- def beta {α} {n : ℕ} : Lambda α (n.succ) → α → Lambda α n := begin
+  --   intros l a,
+  --   cases l,
+  --   apply l_f,
+  --   assumption,
+  -- end
 
-  def id_l {α} : Lambda α 1 := begin
-    constructor,
-    intro a,
-    constructor,
-    assumption,
-  end
+  -- def id_l {α} : Lambda α 1 := begin
+  --   constructor,
+  --   intro a,
+  --   constructor,
+  --   assumption,
+  -- end
 
-  def extract {α} {n : ℕ} : Lambda α 0 → α := begin
-    intro l,
-    cases l,
-    assumption,
-  end
+  -- def extract {α} {n : ℕ} : Lambda α 0 → α := begin
+  --   intro l,
+  --   cases l,
+  --   assumption,
+  -- end
 
 end chapter4
