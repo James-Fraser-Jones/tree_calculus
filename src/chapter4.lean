@@ -149,11 +149,11 @@ namespace chapter4
   lemma bracket_prop {x} {t} : (bracket x t)◦(&' x) ≈ t := begin
     induction t,
     case node {
-      rw bracket',
+      rw bracket,
       apply K'_prop,
     },
     case app : t₁ t₂ h₁ h₂ {
-      rw bracket',
+      rw bracket,
       transitivity,
       apply d'_prop,
       apply natree.pre.equiv.congr,
@@ -161,7 +161,7 @@ namespace chapter4
       assumption,
     },
     case nat_ref {
-      rw bracket',
+      rw bracket,
       split_ifs,
       transitivity,
       apply I'_prop,
@@ -173,11 +173,11 @@ namespace chapter4
   theorem bracket_beta {x} {t u} : (bracket x t)◦u ≈ subst' x u t := begin
     induction t,
     case node {
-      rw [bracket', subst'],
+      rw [bracket, subst'],
       apply K'_prop,  
     },
     case app : t₁ t₂ h₁ h₂ {
-      rw [bracket', subst', d'],
+      rw [bracket, subst', d'],
       transitivity,
       apply stem',
       apply natree.pre.equiv.congr,
@@ -185,7 +185,7 @@ namespace chapter4
       assumption,
     },
     case nat_ref {
-      rw [bracket', subst'],
+      rw [bracket, subst'],
       split_ifs,
       apply I'_prop,
       apply K'_prop,
@@ -231,10 +231,11 @@ namespace chapter4
     },
   end
 
+  --star abs similarly not liftable
   def star_abs : char → 𝕋' → 𝕋'
   | x ▢ := K'◦▢
   | x (&n y) := if elem x (&n y) then I' else K'◦(&n y)
-  | x (t◦(&n y)) := if elem x (&n y) then t else (d' (star_abs x (&n y)))◦(star_abs x t)
+  --| x (t◦(&n y)) := if elem x (&n y) then t else (d' (star_abs x (&n y)))◦(star_abs x t) --this eta-rule case makes proof much more difficult
   | x (t◦u) := (d' (star_abs x u))◦(star_abs x t)
 
   notation `λ*` := star_abs
@@ -245,9 +246,28 @@ namespace chapter4
       rw [star_abs, subst'],
       apply K'_prop,
     },
+    case nat_ref {
+      rw [star_abs, subst'],
+      split_ifs,
+      apply I'_prop,
+      apply K'_prop,
+    },
     case app : t₁ t₂ h₁ h₂ {
-      
-    }
+      rw subst',
+      symmetry,
+      transitivity,
+      apply natree.pre.equiv.congr,
+      symmetry,
+      assumption,
+      symmetry,
+      assumption,
+      symmetry,
+
+      rw star_abs,
+      transitivity,
+      apply d'_prop,
+      refl,
+    },
   end
 
   -- #reduce 'a'.val
