@@ -56,7 +56,7 @@ namespace chapter4
       assumption,
       assumption,
     },
-    case ref {
+    case nat_ref {
       repeat {
         rw subst',
       },
@@ -141,11 +141,12 @@ namespace chapter4
   def d' (x) := ▢◦(▢◦x)
   lemma d'_prop {x y z} : (d' x)◦y◦z ≈ y◦z◦(x◦z) := by simp [d']
 
-  def bracket' : char → 𝕋' → 𝕋'
+  --bracket is not liftable because it "does not preserve the equality induced by the evaluation rules" (as covered in the book)
+  def bracket : char → 𝕋' → 𝕋'
   | x (&n y) := if y = natree.pre.index x then I' else K'◦(&n y)
   | x ▢ := K'◦▢
-  | x (u◦v) := (d' (bracket' x v))◦(bracket' x u)
-  lemma bracket'_prop {x} {t} : (bracket' x t)◦(&' x) ≈ t := begin
+  | x (u◦v) := (d' (bracket x v))◦(bracket x u)
+  lemma bracket_prop {x} {t} : (bracket x t)◦(&' x) ≈ t := begin
     induction t,
     case node {
       rw bracket',
@@ -169,30 +170,7 @@ namespace chapter4
     },
   end
 
-  def bracket : char → 𝕋 → 𝕋 := λ x, quotient.lift (λ t, ⟦bracket' x t⟧) 
-  ( begin
-      intros a b h,
-      simp,
-      induction h,
-      case refl {
-        refl,
-      },
-      case symm {
-        symmetry,
-        assumption,
-      },
-      case trans {
-        transitivity,
-        assumption,
-        assumption,
-      },
-      case rel : t₁ t₂ h {
-        sorry
-      }
-    end
-  )
-
-  lemma bracket'_subst'_equiv {x} {t u} : (bracket' x t)◦u ≈ subst' x u t := begin
+  theorem bracket_beta {x} {t u} : (bracket x t)◦u ≈ subst' x u t := begin
     induction t,
     case node {
       rw [bracket', subst'],
@@ -212,6 +190,64 @@ namespace chapter4
       apply I'_prop,
       apply K'_prop,
     },
+  end
+
+  def elem : char → 𝕋' → Prop
+  | x (&n y) := y = natree.pre.index x
+  | x ▢ := false
+  | x (t◦u) := elem x t ∨ elem x u
+
+  instance elem_decidable {x} {t} : decidable (elem x t) := begin
+    induction t,
+    case node {
+      left,
+      intro h,
+      cases h,
+    },
+    case app : t₁ t₂ h₁ h₂ {
+      cases h₁,
+        cases h₂,
+          left,
+          intro h,
+          cases h,
+          apply h₁,
+          assumption,
+          apply h₂,
+          assumption,
+        right,
+        right,
+        assumption,
+      cases h₂,
+        right,
+        left,
+        assumption,
+      right,
+      right,
+      assumption,
+    },
+    case nat_ref {
+      rw elem,
+      exact eq.decidable t (natree.pre.index x),
+    },
+  end
+
+  def star_abs : char → 𝕋' → 𝕋'
+  | x ▢ := K'◦▢
+  | x (&n y) := if elem x (&n y) then I' else K'◦(&n y)
+  | x (t◦(&n y)) := if elem x (&n y) then t else (d' (star_abs x (&n y)))◦(star_abs x t)
+  | x (t◦u) := (d' (star_abs x u))◦(star_abs x t)
+
+  notation `λ*` := star_abs
+
+  theorem star_beta {x} {t u} : (λ* x t)◦u ≈ subst' x u t := begin
+    induction t,
+    case node {
+      rw [star_abs, subst'],
+      apply K'_prop,
+    },
+    case app : t₁ t₂ h₁ h₂ {
+      
+    }
   end
 
   -- #reduce 'a'.val
