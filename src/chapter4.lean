@@ -192,12 +192,12 @@ namespace chapter4
     },
   end
 
-  def elem : char → 𝕋' → Prop
+  def is_elem : char → 𝕋' → Prop
   | x (&n y) := y = natree.pre.index x
   | x ▢ := false
-  | x (t◦u) := elem x t ∨ elem x u
+  | x (t◦u) := is_elem x t ∨ is_elem x u
 
-  instance elem_decidable {x} {t} : decidable (elem x t) := begin
+  instance elem_decidable {x} {t} : decidable (is_elem x t) := begin
     induction t,
     case node {
       left,
@@ -226,19 +226,132 @@ namespace chapter4
       assumption,
     },
     case nat_ref {
-      rw elem,
+      rw is_elem,
       exact eq.decidable t (natree.pre.index x),
     },
   end
 
+  lemma is_elem_id {x} : is_elem x (&' x) := by rw [natree.pre.ref, is_elem]
+
   --star abs similarly not liftable
   def star_abs : char → 𝕋' → 𝕋'
   | x ▢ := K'◦▢
-  | x (&n y) := if elem x (&n y) then I' else K'◦(&n y)
-  --| x (t◦(&n y)) := if elem x (&n y) then t else (d' (star_abs x (&n y)))◦(star_abs x t) --this eta-rule case makes proof much more difficult
+  | x (&n y) := if is_elem x (&n y) then I' else K'◦(&n y)
+  | x (t◦(&n y)) := if is_elem x (&n y) ∧ ¬ is_elem x t then t else (d' (star_abs x (&n y)))◦(star_abs x t) --special case for eta-reduction
   | x (t◦u) := (d' (star_abs x u))◦(star_abs x t)
 
   notation `λ*` := star_abs
+
+  lemma star_eta {x} {t} (h : ¬ is_elem x t) : λ* x (t◦(&' x)) ≈ t := begin
+    rw [natree.pre.ref, star_abs],
+    split_ifs,
+    refl,
+    exfalso,
+    cases not_and_distrib.mp h_1,
+
+    apply h_2,
+    rw is_elem,
+
+    apply h_2,
+    assumption,
+  end
+
+  lemma star_unchanged {x} {t u} (h : ¬ is_elem x t) : (λ* x t)◦u ≈ t := begin
+    induction t,
+    case node {
+      rw star_abs,
+      apply K'_prop,
+    },
+    case app : t₁ t₂ h₁ h₂ {
+      induction t₂,
+      case node {
+        rw star_abs,
+        transitivity,
+        apply d'_prop,
+        apply natree.pre.equiv.congr,
+
+        apply h₁,
+        intro p,
+        apply h,
+        rw is_elem,
+        left,
+        assumption,
+
+        rw star_abs,
+        apply K'_prop,
+      },
+      case app : t₃ t₄ h₃ h₄ {
+        rw star_abs,
+        transitivity,
+        apply d'_prop,
+        apply natree.pre.equiv.congr,
+
+        apply h₁,
+        intro p,
+        apply h,
+        rw is_elem,
+        left,
+        assumption,
+
+        apply h₂,
+        intro p,
+        apply h,
+        rw is_elem,
+        right,
+        assumption,
+      },
+      case nat_ref {
+        symmetry,
+        transitivity,
+        apply natree.pre.equiv.congr,
+
+        symmetry,
+        apply h₁,
+        intro p,
+        apply h,
+        rw is_elem,
+        left,
+        assumption,
+
+        symmetry,
+        apply h₂,
+        intro p,
+        apply h,
+        rw is_elem,
+        right,
+        assumption,
+
+        symmetry,
+
+        repeat {rw star_abs},
+        split_ifs,
+
+        exfalso,
+        apply h,
+        rw is_elem,
+        right,
+        assumption,
+
+        exfalso,
+        apply h_2,
+        apply and.left,
+        assumption,
+
+        transitivity,
+        apply d'_prop,
+        refl,
+
+        transitivity,
+        apply d'_prop,
+        refl,
+      },
+    },
+    case nat_ref {
+      rw star_abs,
+      split_ifs,
+      apply K'_prop,
+    },
+  end
 
   theorem star_beta {x} {t u} : (λ* x t)◦u ≈ subst' x u t := begin
     induction t,
@@ -254,6 +367,7 @@ namespace chapter4
     },
     case app : t₁ t₂ h₁ h₂ {
       rw subst',
+      
       symmetry,
       transitivity,
       apply natree.pre.equiv.congr,
@@ -263,10 +377,42 @@ namespace chapter4
       assumption,
       symmetry,
 
-      rw star_abs,
-      transitivity,
-      apply d'_prop,
-      refl,
+      induction t₂,
+      case node {
+        rw star_abs,
+        transitivity,
+        apply d'_prop,
+        refl,
+      },
+      case app {
+        rw star_abs,
+        transitivity,
+        apply d'_prop,
+        refl,
+      },
+      case nat_ref {
+        repeat {
+          rw star_abs,
+        },
+        symmetry,
+        split_ifs,
+
+        apply natree.pre.equiv.congr,
+        apply star_unchanged,
+        exact h_1.2,
+        apply I'_prop,
+
+        symmetry,
+        apply d'_prop,
+
+        exfalso,
+        apply h,
+        apply and.left,
+        assumption,
+
+        symmetry,
+        apply d'_prop,
+      },
     },
   end
 
