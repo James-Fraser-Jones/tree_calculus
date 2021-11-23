@@ -5,7 +5,7 @@ open chapter3
 namespace chapter4
 
   def subst' : char → 𝕋' → 𝕋' → 𝕋'
-  | x u (&n y) := if y = natree.pre.index x then u else &n y
+  | x u (#n y) := if y = natree.pre.index x then u else #n y
   | x u ▢ := ▢
   | x u (s◦t) := (subst' x u s) ◦ (subst' x u t)
 
@@ -143,10 +143,10 @@ namespace chapter4
 
   --bracket is not liftable because it "does not preserve the equality induced by the evaluation rules" (as covered in the book)
   def bracket : char → 𝕋' → 𝕋'
-  | x (&n y) := if y = natree.pre.index x then I' else K'◦(&n y)
+  | x (#n y) := if y = natree.pre.index x then I' else K'◦(#n y)
   | x ▢ := K'◦▢
   | x (u◦v) := (d' (bracket x v))◦(bracket x u)
-  lemma bracket_prop {x} {t} : (bracket x t)◦(&' x) ≈ t := begin
+  lemma bracket_prop {x} {t} : (bracket x t)◦(# x) ≈ t := begin
     induction t,
     case node {
       rw bracket,
@@ -193,7 +193,7 @@ namespace chapter4
   end
 
   def is_elem : char → 𝕋' → Prop
-  | x (&n y) := y = natree.pre.index x
+  | x (#n y) := y = natree.pre.index x
   | x ▢ := false
   | x (t◦u) := is_elem x t ∨ is_elem x u
 
@@ -231,18 +231,18 @@ namespace chapter4
     },
   end
 
-  lemma is_elem_id {x} : is_elem x (&' x) := by rw [natree.pre.ref, is_elem]
+  lemma is_elem_id {x} : is_elem x (# x) := by rw [natree.pre.ref, is_elem]
 
   --star abs similarly not liftable
   def star_abs : char → 𝕋' → 𝕋'
   | x ▢ := K'◦▢
-  | x (&n y) := if is_elem x (&n y) then I' else K'◦(&n y)
-  | x (t◦(&n y)) := if is_elem x (&n y) ∧ ¬ is_elem x t then t else (d' (star_abs x (&n y)))◦(star_abs x t) --special case for eta-reduction
+  | x (#n y) := if is_elem x (#n y) then I' else K'◦(#n y)
+  | x (t◦(#n y)) := if is_elem x (#n y) ∧ ¬ is_elem x t then t else (d' (star_abs x (#n y)))◦(star_abs x t) --special case for eta-reduction
   | x (t◦u) := (d' (star_abs x u))◦(star_abs x t)
 
-  notation `λ*` := star_abs
+  notation `λ*` x `, ` t := star_abs x t
 
-  lemma star_eta {x} {t} (h : ¬ is_elem x t) : λ* x (t◦(&' x)) ≈ t := begin
+  lemma star_eta {x} {t} (h : ¬ is_elem x t) : (λ*x, t◦#x) ≈ t := begin
     rw [natree.pre.ref, star_abs],
     split_ifs,
     refl,
@@ -256,7 +256,7 @@ namespace chapter4
     assumption,
   end
 
-  lemma star_unchanged {x} {t u} (h : ¬ is_elem x t) : (λ* x t)◦u ≈ t := begin
+  lemma star_unchanged {x} {t u} (h : ¬ is_elem x t) : (λ*x, t)◦u ≈ t := begin
     induction t,
     case node {
       rw star_abs,
@@ -353,7 +353,7 @@ namespace chapter4
     },
   end
 
-  theorem star_beta {x} {t u} : (λ* x t)◦u ≈ subst' x u t := begin
+  theorem star_beta {x} {t u} : (λ*x, t)◦u ≈ subst' x u t := begin
     induction t,
     case node {
       rw [star_abs, subst'],
@@ -415,6 +415,8 @@ namespace chapter4
       },
     },
   end
+
+  def omega : 𝕋 := ⟦λ*'z', λ*'f', #'f'◦(#'z'◦#'z'◦#'f')⟧
 
   -- #reduce 'a'.val
   -- #reduce to_bool ('a' = 'b')
