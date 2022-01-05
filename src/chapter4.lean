@@ -505,6 +505,7 @@ namespace chapter4
     apply I'_prop,
   end
 
+<<<<<<< HEAD
   def wait (x y) := (d I)⬝((d (K⬝y))⬝(K⬝x))
   lemma wait_prop {x y z} : (wait x y)⬝z = x⬝y⬝z := by simp [wait, d, I, K]
 
@@ -517,6 +518,9 @@ namespace chapter4
   def wait2 (x y) := (d ((d (K⬝((d (K⬝y))⬝(K⬝x))))⬝(d ((d K)⬝(K⬝△)))⬝(K⬝△)))⬝(K⬝(d I))
 
   -- lemma d'_S'_equiv {x y} : S'◦x◦y ≈ (d' y)◦x := begin
+=======
+    -- lemma d'_S'_equiv {x y} : S'◦x◦y ≈ (d' y)◦x := begin
+>>>>>>> 778c83166932e5da4f2a8f42aed421105f02e5a0
   --   rw S',
   --   transitivity,
   --   apply natree.pre.equiv.congr_left,
