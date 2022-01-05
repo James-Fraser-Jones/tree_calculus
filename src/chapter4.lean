@@ -121,25 +121,71 @@ namespace chapter4
     end
   )
 
+  lemma subst'_var_match {x} {u} : subst' x u #x = u := begin
+    rw natree.pre.ref,
+    rw subst',
+    split_ifs,
+    refl,
+    refl,
+  end
+
   @[simp] def kernel' {y z} : ▢◦▢◦y◦z ≈ y := natree.pre.equiv.kernel
   @[simp] def stem' {x y z} : ▢◦(▢◦x)◦y◦z ≈ y◦z◦(x◦z) := natree.pre.equiv.stem
   @[simp] def fork' {w x y z} : ▢◦(▢◦w◦x)◦y◦z ≈ z◦w◦x := natree.pre.equiv.fork
-
+      
   def K' := ▢◦▢
   lemma K'_prop {a b} : K'◦a◦b ≈ a := by simp [K']
 
   def I' := ▢◦K'◦K'
-  lemma I'_prop {a} : I'◦a ≈ a := 
-  begin
+  lemma I'_prop {a} : I'◦a ≈ a := begin
     rw I',
-    rw K',
     transitivity,
     apply stem',
-    apply kernel',
+    apply K'_prop,
   end
 
   def d' (x) := ▢◦(▢◦x)
   lemma d'_prop {x y z} : (d' x)◦y◦z ≈ y◦z◦(x◦z) := by simp [d']
+
+  def D' := ▢◦K'◦(K'◦▢)
+  lemma D'_prop {x y z} : D'◦x◦y◦z ≈ y◦z◦(x◦z) := begin
+    rw D',
+    transitivity,
+    apply natree.pre.equiv.congr_left,
+    apply natree.pre.equiv.congr_left,
+    transitivity,
+    apply stem',
+    apply natree.pre.equiv.congr_left,
+    apply K'_prop,
+    apply stem',
+  end
+
+  def S' := (d' (K'◦D'))◦((d' K')◦(K'◦D'))
+  lemma S'_prop {x y z} : S'◦x◦y◦z ≈ x◦z◦(y◦z) := begin
+    rw S',
+    transitivity,
+    apply natree.pre.equiv.congr_left,
+    apply natree.pre.equiv.congr_left,
+    transitivity,
+    apply d'_prop,
+    apply natree.pre.equiv.congr_left,
+    transitivity,
+    apply d'_prop,
+    apply natree.pre.equiv.congr_left,
+    apply K'_prop,
+    transitivity,
+    apply natree.pre.equiv.congr_left,
+    transitivity,
+    apply D'_prop,
+    apply natree.pre.equiv.congr_left,
+    apply natree.pre.equiv.congr_left,
+    apply K'_prop,
+    transitivity,
+    apply natree.pre.equiv.congr_left,
+    apply natree.pre.equiv.congr_right,
+    apply K'_prop,
+    apply D'_prop,
+  end
 
   --bracket is not liftable because it "does not preserve the equality induced by the evaluation rules" (as covered in the book)
   def bracket : char → 𝕋' → 𝕋'
@@ -240,9 +286,9 @@ namespace chapter4
   | x (t◦(#n y)) := if is_elem x (#n y) ∧ ¬ is_elem x t then t else (d' (star_abs x (#n y)))◦(star_abs x t) --special case for eta-reduction
   | x (t◦u) := (d' (star_abs x u))◦(star_abs x t)
 
-  notation `λ*` x `, ` t := star_abs x t
+  notation `λ* ` x `, ` t := star_abs x t
 
-  lemma star_eta {x} {t} (h : ¬ is_elem x t) : (λ*x, t◦#x) ≈ t := begin
+  lemma star_eta {x} {t} (h : ¬ is_elem x t) : (λ* x, t◦#x) ≈ t := begin
     rw [natree.pre.ref, star_abs],
     split_ifs,
     refl,
@@ -256,7 +302,7 @@ namespace chapter4
     assumption,
   end
 
-  lemma star_unchanged {x} {t u} (h : ¬ is_elem x t) : (λ*x, t)◦u ≈ t := begin
+  lemma star_unchanged {x} {t u} (h : ¬ is_elem x t) : (λ* x, t)◦u ≈ t := begin
     induction t,
     case node {
       rw star_abs,
@@ -353,7 +399,7 @@ namespace chapter4
     },
   end
 
-  theorem star_beta {x} {t u} : (λ*x, t)◦u ≈ subst' x u t := begin
+  theorem star_beta {x} {t u} : (λ* x, t)◦u ≈ subst' x u t := begin
     induction t,
     case node {
       rw [star_abs, subst'],
@@ -416,7 +462,88 @@ namespace chapter4
     },
   end
 
-  def omega : 𝕋 := ⟦λ*'z', λ*'f', #'f'◦(#'z'◦#'z'◦#'f')⟧
+  def ω : 𝕋 := ⟦λ* 'z', λ* 'f', #'f'◦(#'z'◦#'z'◦#'f')⟧
+  example : ω = △⬝(△⬝(I⬝I⬝I)) := sorry
+
+  def Y (f) := ω⬝ω⬝f
+  lemma Y_prop {f} : Y f = f⬝(Y f) := begin
+    rw Y,
+    
+    transitivity,
+    apply congr, apply congr, refl,
+    apply congr, apply congr, refl,
+    rw ω,
+    refl, refl,
+
+    have h₁ := quotient.exists_rep ω, cases h₁ with ω' h₁, rw ←h₁,
+    have h₂ := quotient.exists_rep f, cases h₂ with f' h₂, rw ←h₂,
+    repeat {rw ←natree.quot_dist_app},
+    apply quotient.sound,
+
+    transitivity,
+    apply natree.pre.equiv.congr,
+    apply star_beta,
+    refl,
+
+    transitivity,
+    rw star_abs,
+    rw subst',
+
+    transitivity,
+    apply natree.pre.equiv.congr_left,
+    apply natree.pre.equiv.congr,
+
+    show subst' 'z' ω' (d' (λ* 'f', #'z'◦#'z'◦#'f')) ≈ d' (ω'◦ω'),
+    refl,
+    show subst' 'z' ω' (λ* 'f', #'f') ≈ I',
+    refl,
+
+    transitivity,
+    apply d'_prop,
+
+    apply natree.pre.equiv.congr_left,
+    apply I'_prop,
+  end
+
+  def wait (x y) := (d I)⬝((d (K⬝y))⬝(K⬝x))
+  lemma wait_prop {x y z} : (wait x y)⬝z = x⬝y⬝z := by simp [wait, d, I, K]
+
+  def wait1 (x) := (d ((d (K⬝(K⬝x)))⬝((d ((d △)⬝(K⬝△)))⬝(K⬝△))))⬝(K⬝(d (△⬝K⬝K)))
+  lemma wait1_prop {x y z} : (wait1 x)⬝y⬝z = x⬝y⬝z := begin
+    rw wait1,
+    simp [d, I, K],
+  end
+
+  def wait2 (x y) := (d ((d (K⬝((d (K⬝y))⬝(K⬝x))))⬝(d ((d K)⬝(K⬝△)))⬝(K⬝△)))⬝(K⬝(d I))
+
+  -- lemma d'_S'_equiv {x y} : S'◦x◦y ≈ (d' y)◦x := begin
+  --   rw S',
+  --   transitivity,
+  --   apply natree.pre.equiv.congr_left,
+  --   transitivity,
+  --   apply d'_prop,
+  --   apply natree.pre.equiv.congr_left,
+  --   transitivity,
+  --   apply d'_prop,
+  --   apply natree.pre.equiv.congr_left,
+  --   apply K'_prop,
+  --   transitivity,
+  --   apply D'_prop,
+  --   transitivity,
+  --   apply natree.pre.equiv.congr,
+  --   apply natree.pre.equiv.congr_left,
+  --   apply K'_prop,
+  --   apply K'_prop,
+  --   apply natree.pre.equiv.congr_left,
+  --   rw D',
+  --   rw d',
+  --   transitivity,
+  --   apply stem',
+  --   transitivity,
+  --   apply natree.pre.equiv.congr_left,
+  --   apply K'_prop,
+  --   refl,
+  -- end
 
   -- #reduce 'a'.val
   -- #reduce to_bool ('a' = 'b')
