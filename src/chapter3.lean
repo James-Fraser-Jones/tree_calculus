@@ -13,10 +13,19 @@ namespace chapter3
 
   --Fundamental Combinators
   def K := △⬝△
+  lemma K_prop {a b} : K⬝a⬝b = a := by simp [K]
+
   def I := △⬝K⬝K
+  lemma I_prop {x} : I⬝x = x := by simp [I, K]
+
   def D := △⬝K⬝(K⬝△)
+  lemma D_prop {x y z} : D⬝x⬝y⬝z = y⬝z⬝(x⬝z) := by simp [D, K]
+
   def d (x) := △⬝(△⬝x)
+  lemma d_prop {x y z} : (d x)⬝y⬝z = y⬝z⬝(x⬝z) := by simp [d]
+
   def S := (d (K⬝D))⬝((d K)⬝(K⬝D))
+  lemma S_prop {x y z} : S⬝x⬝y⬝z = x⬝z⬝(y⬝z) := by simp [S, d, D, K]
 
   --Programs
   inductive is_program : 𝕋 → Prop

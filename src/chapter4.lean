@@ -463,7 +463,6 @@ namespace chapter4
   end
 
   def ω : 𝕋 := ⟦λ* 'z', λ* 'f', #'f'◦(#'z'◦#'z'◦#'f')⟧
-  example : ω = △⬝(△⬝(I⬝I⬝I)) := sorry
 
   def Y (f) := ω⬝ω⬝f
   lemma Y_prop {f} : Y f = f⬝(Y f) := begin
@@ -508,80 +507,30 @@ namespace chapter4
   def wait (x y) := (d I)⬝((d (K⬝y))⬝(K⬝x))
   lemma wait_prop {x y z} : (wait x y)⬝z = x⬝y⬝z := by simp [wait, d, I, K]
 
-  def wait1 (x) := (d ((d (K⬝(K⬝x)))⬝((d ((d △)⬝(K⬝△)))⬝(K⬝△))))⬝(K⬝(d (△⬝K⬝K)))
-  lemma wait1_prop {x y z} : (wait1 x)⬝y⬝z = x⬝y⬝z := begin
-    rw wait1,
-    simp [d, I, K],
+  def wait1 (x) := d (d (K⬝(K⬝x))⬝(d ((d K)⬝(K⬝△))⬝(K⬝△)))⬝(K⬝(d (△⬝K⬝K)))
+  lemma wait1_prop {x y z} : (wait1 x)⬝y⬝z = x⬝y⬝z := by simp [wait1, d, I, K]
+
+  def self_apply := (d I)⬝I
+  lemma self_apply_prop {x} : self_apply⬝x = x⬝x := by simp [self_apply, d, I, K]
+
+  def Z (f) := wait self_apply (d ((wait1 self_apply)⬝(K⬝f)))
+  lemma Z_prop {f x} : (Z f)⬝x = f⬝(Z f)⬝x := begin
+    transitivity,
+    rw Z,
+    transitivity,
+    apply wait_prop,
+
+    transitivity,
+    apply congr_arg2,
+    apply self_apply_prop,
+    refl,
+
+    transitivity,
+    apply d_prop,
+
+    --???
   end
 
-  def wait2 (x y) := (d ((d (K⬝((d (K⬝y))⬝(K⬝x))))⬝(d ((d K)⬝(K⬝△)))⬝(K⬝△)))⬝(K⬝(d I))
-
-  -- lemma d'_S'_equiv {x y} : S'◦x◦y ≈ (d' y)◦x := begin
-  --   rw S',
-  --   transitivity,
-  --   apply natree.pre.equiv.congr_left,
-  --   transitivity,
-  --   apply d'_prop,
-  --   apply natree.pre.equiv.congr_left,
-  --   transitivity,
-  --   apply d'_prop,
-  --   apply natree.pre.equiv.congr_left,
-  --   apply K'_prop,
-  --   transitivity,
-  --   apply D'_prop,
-  --   transitivity,
-  --   apply natree.pre.equiv.congr,
-  --   apply natree.pre.equiv.congr_left,
-  --   apply K'_prop,
-  --   apply K'_prop,
-  --   apply natree.pre.equiv.congr_left,
-  --   rw D',
-  --   rw d',
-  --   transitivity,
-  --   apply stem',
-  --   transitivity,
-  --   apply natree.pre.equiv.congr_left,
-  --   apply K'_prop,
-  --   refl,
-  -- end
-
-  -- #reduce 'a'.val
-  -- #reduce to_bool ('a' = 'b')
-
-  -- inductive LamTree : ℕ → Type
-  -- | tree (t : 𝕋) : LamTree 0
-  -- | lam {n} (f : 𝕋 → LamTree n) : LamTree (n.succ)
-
-  -- def extract : LamTree 0 → 𝕋 := begin
-  --   intro t,
-  --   cases t,
-  --   assumption,
-  -- end
-
-  -- notation λ* x, b := LamTree.lam (λ x, b)
-
-  -- inductive Lambda (α : Sort*) : ℕ → Sort*
-  -- | const (a : α) : Lambda 0
-  -- | lam {n} (f : α → Lambda n) : Lambda (n.succ)
-
-  -- def beta {α} {n : ℕ} : Lambda α (n.succ) → α → Lambda α n := begin
-  --   intros l a,
-  --   cases l,
-  --   apply l_f,
-  --   assumption,
-  -- end
-
-  -- def id_l {α} : Lambda α 1 := begin
-  --   constructor,
-  --   intro a,
-  --   constructor,
-  --   assumption,
-  -- end
-
-  -- def extract {α} {n : ℕ} : Lambda α 0 → α := begin
-  --   intro l,
-  --   cases l,
-  --   assumption,
-  -- end
+  def swap f := 
 
 end chapter4
