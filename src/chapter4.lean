@@ -513,24 +513,17 @@ namespace chapter4
   def self_apply := (d I)⬝I
   lemma self_apply_prop {x} : self_apply⬝x = x⬝x := by simp [self_apply, d, I, K]
 
-  def Z (f) := wait self_apply (d ((wait1 self_apply)⬝(K⬝f)))
-  lemma Z_prop {f x} : (Z f)⬝x = f⬝(Z f)⬝x := begin
-    transitivity,
-    rw Z,
-    transitivity,
-    apply wait_prop,
+  def Z (f) := (wait1 self_apply)⬝((d (wait1 self_apply)) ⬝ (K⬝f))
+  lemma Z_prop {f x} : (Z f)⬝x = f⬝(Z f)⬝x := by simp [Z, wait1, self_apply, d, I, K]
 
-    transitivity,
-    apply congr_arg2,
-    apply self_apply_prop,
-    refl,
+  def swap (f) := (d K)⬝(K⬝(((d (K⬝f))⬝D)))
+  lemma swap_prop {f x y} : (swap f)⬝x⬝y = f⬝y⬝x := by simp [swap, d, D, I, K]
 
-    transitivity,
-    apply d_prop,
+  def Y₂ (f) := Z (swap f)
 
-    --???
-  end
+  theorem fixpoint_function {f x} : (Y₂ f)⬝x = f⬝x⬝(Y₂ f) := by simp [Y₂, Z, swap, wait1, self_apply, d, D, I, K]
+  lemma Y₂_prop {f x} : (Y₂ f)⬝x = f⬝x⬝(Y₂ f) := fixpoint_function
 
-  def swap f := 
+  def plus : 𝕋 := Y₂ ⟦λ* 'm', λ* 'p', ▢◦#'m'◦I'◦(K'◦(λ* 'x', λ* 'n', K'◦(#'p'◦#'x'◦#'n')))⟧
 
 end chapter4
