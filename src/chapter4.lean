@@ -526,4 +526,70 @@ namespace chapter4
 
   def plus : 𝕋 := Y₂ ⟦λ* 'm', λ* 'p', ▢◦#'m'◦I'◦(K'◦(λ* 'x', λ* 'n', K'◦(#'p'◦#'x'◦#'n')))⟧
 
+  def t_nil := △
+  def t_cons (h t) := △⬝h⬝t
+
+  def t_head := ⟦λ* 'x', (((▢◦#'x')◦(K'◦I'))◦K')⟧
+  lemma head_prop {h t} : t_head⬝(t_cons h t) = h := begin
+    rw [t_head, t_cons],
+    have h₁ := quotient.exists_rep h, cases h₁ with h' h₁, rw ←h₁,
+    have h₂ := quotient.exists_rep t, cases h₂ with t' h₂, rw ←h₂,
+    rw natree.node,
+    repeat {rw ←quot_dist_app},
+    apply quotient.sound,
+    transitivity,
+    apply star_beta,
+    repeat {rw subst'},
+    show (▢◦(▢◦h'◦t')◦(K'◦I')◦K') ≈ h',
+    transitivity,
+    apply natree.pre.equiv.lift_reduces_to,
+    apply natree.pre.reduces.fork,
+    apply K'_prop,
+  end
+
+  def t_tail := ⟦λ* 'x', (((▢◦#'x')◦(K'◦I'))◦(K'◦I'))⟧
+  lemma tail_prop {h t} : t_tail⬝(t_cons h t) = t := begin
+    rw [t_tail, t_cons],
+    have h₁ := quotient.exists_rep h, cases h₁ with h' h₁, rw ←h₁,
+    have h₂ := quotient.exists_rep t, cases h₂ with t' h₂, rw ←h₂,
+    rw natree.node,
+    repeat {rw ←quot_dist_app},
+    apply quotient.sound,
+    transitivity,
+    apply star_beta,
+    repeat {rw subst'},
+    transitivity,
+    apply natree.pre.equiv.congr,
+    apply natree.pre.equiv.congr,
+    apply natree.pre.equiv.congr,
+    refl,
+    show subst' 'x' (▢◦h'◦t') (#'x') ≈ (▢◦h'◦t'),
+    refl,
+    show subst' 'x' (▢◦h'◦t') K'◦subst' 'x' (▢◦h'◦t') I' ≈ K'◦I',
+    refl,
+    show subst' 'x' (▢◦h'◦t') K'◦subst' 'x' (▢◦h'◦t') I' ≈ K'◦I',
+    refl,
+    transitivity,
+    apply natree.pre.equiv.lift_reduces_to,
+    apply natree.pre.reduces.fork,
+    transitivity,
+    apply natree.pre.equiv.congr_left,
+    apply K'_prop,
+    apply I'_prop,
+  end
+
+  def t_nil' := ▢
+  def t_cons' (h t) := ▢◦h◦t
+
+  def list_map_swap := ⟦(λ* 'x', ▢◦#'x'◦(K'◦(K'◦t_nil')))◦(λ* 'h', λ* 't', λ* 'm', λ* 'f', t_cons' (#'f'◦#'h') (#'m'◦#'f'◦#'t'))⟧
+  def list_map := swap (Y₂ list_map_swap)
+  lemma list_map_prop_nil {f} : list_map⬝f⬝t_nil = t_nil := begin
+    --??? (we need to stop having to delve under the quotient whenever something is defined using star_abs)
+    sorry
+  end
+  lemma list_map_prop_cons {f h t} : list_map⬝f⬝(t_cons h t) = t_cons (f⬝h) (list_map⬝f⬝t) := begin
+    --???
+    sorry
+  end
+
 end chapter4
