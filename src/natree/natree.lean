@@ -21,10 +21,10 @@ namespace natree
   def app : 𝕋 → 𝕋 → 𝕋 := quotient.lift₂ app' @app'_liftable
   infixl `⬝`:60 := app
 
-  theorem quot_dist_app {a b} : ⟦a ◦ b⟧ = ⟦a⟧ ⬝ ⟦b⟧ := rfl
-
-  def ref : char → 𝕋 := λ c, ⟦pre.ref c⟧
+  def ref (c) := ⟦pre.ref c⟧
   prefix `&`:60 := ref
+
+  theorem quot_dist_app {a b} : ⟦a ◦ b⟧ = ⟦a⟧ ⬝ ⟦b⟧ := rfl
 
   theorem kernel {y z} : △⬝△⬝y⬝z = y := begin
     have h₁ := quotient.exists_rep y, cases h₁ with y' h₁, rw ←h₁,

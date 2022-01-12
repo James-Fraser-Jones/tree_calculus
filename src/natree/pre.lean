@@ -6,17 +6,13 @@ namespace natree
   inductive pre 
   | node : pre
   | app : pre → pre → pre
-  | nat_ref : ℕ → pre
+  | ref : char → pre
 
   namespace pre
 
     notation `𝕋'` := pre
     notation `▢` := node
     infixl `◦`:60 := app
-    prefix `#n`:60 := nat_ref
-
-    def index : char → ℕ := λ c, c.val - 97
-    def ref (c : char) := nat_ref (index c)
     prefix `#`:60 := ref
 
     --reduction rules of tree calculus, specified as an inductive binary relation on pre-trees

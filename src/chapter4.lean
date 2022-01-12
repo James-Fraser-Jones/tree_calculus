@@ -5,7 +5,7 @@ open chapter3
 namespace chapter4
 
   def subst' : char → 𝕋' → 𝕋' → 𝕋'
-  | x u (#n y) := if y = natree.pre.index x then u else #n y
+  | x u (#y) := if y = x then u else #y
   | x u ▢ := ▢
   | x u (s◦t) := (subst' x u s) ◦ (subst' x u t)
 
@@ -56,7 +56,7 @@ namespace chapter4
       assumption,
       assumption,
     },
-    case nat_ref {
+    case ref {
       repeat {
         rw subst',
       },
@@ -121,13 +121,61 @@ namespace chapter4
     end
   )
 
-  lemma subst'_var_match {x} {u} : subst' x u #x = u := begin
-    rw natree.pre.ref,
+  lemma subst_ref {x y} {u} : subst x u &y = if x = y then u else &y := begin
+    have h₁ := quotient.exists_rep (u), cases h₁ with u' h₁, rw ←h₁,
+    rw natree.ref,
+
+    split_ifs,
+
+    rw [subst, h],
+    simp,
+    rw subst1,
+    simp,
     rw subst',
     split_ifs,
     refl,
     refl,
+
+    rw [subst],
+    simp,
+    rw subst1,
+    simp,
+    rw subst',
+    split_ifs,
+    
+    exfalso,
+    apply h,
+    symmetry,
+    assumption,
+    refl,
   end
+
+  lemma subst_node {x} {u} : subst x u △ = △ := begin
+    have h₁ := quotient.exists_rep (u), cases h₁ with u' h₁, rw ←h₁,
+    rw natree.node,
+    rw subst,
+    simp,
+    rw subst1,
+    simp,
+    refl,
+  end
+
+  lemma subst_app {x} {u s t} : subst x u (s⬝t) = (subst x u s)⬝(subst x u t) := begin
+    have h₁ := quotient.exists_rep (u), cases h₁ with u' h₁, rw ←h₁,
+    have h₂ := quotient.exists_rep (s), cases h₂ with s' h₂, rw ←h₂,
+    have h₃ := quotient.exists_rep (t), cases h₃ with t' h₃, rw ←h₃,
+    rw subst,
+    simp,
+    rw subst1,
+    simp,
+    refl,
+  end
+
+  --lemma which knows that substituting into a term with no free variables of a specific character is pointless
+
+  --lemma which know that there *will* be no free 'x' variables in a term which starts with "λ* x, ..."
+
+  -----------------------------------------------------------------------------------
 
   @[simp] def kernel' {y z} : ▢◦▢◦y◦z ≈ y := natree.pre.equiv.kernel
   @[simp] def stem' {x y z} : ▢◦(▢◦x)◦y◦z ≈ y◦z◦(x◦z) := natree.pre.equiv.stem
@@ -187,9 +235,11 @@ namespace chapter4
     apply D'_prop,
   end
 
+  -----------------------------------------------------------------------------------
+
   --bracket is not liftable because it "does not preserve the equality induced by the evaluation rules" (as covered in the book)
   def bracket : char → 𝕋' → 𝕋'
-  | x (#n y) := if y = natree.pre.index x then I' else K'◦(#n y)
+  | x (#y) := if y =  x then I' else K'◦(#y)
   | x ▢ := K'◦▢
   | x (u◦v) := (d' (bracket x v))◦(bracket x u)
   lemma bracket_prop {x} {t} : (bracket x t)◦(# x) ≈ t := begin
@@ -206,12 +256,12 @@ namespace chapter4
       assumption,
       assumption,
     },
-    case nat_ref {
+    case ref {
       rw bracket,
       split_ifs,
       transitivity,
       apply I'_prop,
-      rw [natree.pre.ref, h],
+      rw h,
       apply K'_prop,
     },
   end
@@ -230,7 +280,7 @@ namespace chapter4
       assumption,
       assumption,
     },
-    case nat_ref {
+    case ref {
       rw [bracket, subst'],
       split_ifs,
       apply I'_prop,
@@ -238,8 +288,10 @@ namespace chapter4
     },
   end
 
+  -----------------------------------------------------------------------------------
+
   def is_elem : char → 𝕋' → Prop
-  | x (#n y) := y = natree.pre.index x
+  | x (#y) := y =  x
   | x ▢ := false
   | x (t◦u) := is_elem x t ∨ is_elem x u
 
@@ -271,25 +323,31 @@ namespace chapter4
       right,
       assumption,
     },
-    case nat_ref {
+    case ref {
       rw is_elem,
-      exact eq.decidable t (natree.pre.index x),
+      exact eq.decidable t ( x),
     },
   end
 
-  lemma is_elem_id {x} : is_elem x (# x) := by rw [natree.pre.ref, is_elem]
+  lemma is_elem_id {x} : is_elem x (# x) := by rw is_elem
+
+  -----------------------------------------------------------------------------------
 
   --star abs similarly not liftable
-  def star_abs : char → 𝕋' → 𝕋'
+  def star_abs' : char → 𝕋' → 𝕋'
   | x ▢ := K'◦▢
-  | x (#n y) := if is_elem x (#n y) then I' else K'◦(#n y)
-  | x (t◦(#n y)) := if is_elem x (#n y) ∧ ¬ is_elem x t then t else (d' (star_abs x (#n y)))◦(star_abs x t) --special case for eta-reduction
-  | x (t◦u) := (d' (star_abs x u))◦(star_abs x t)
+  | x (#y) := if is_elem x (#y) then I' else K'◦(#y)
+  | x (t◦(#y)) := if is_elem x (#y) ∧ ¬ is_elem x t then t else (d' (star_abs' x (#y)))◦(star_abs' x t) --special case for eta-reduction
+  | x (t◦u) := (d' (star_abs' x u))◦(star_abs' x t)
 
+  notation `λ** ` x `, ` t := star_abs' x t
+
+  def star_abs (x) (t) := ⟦λ** x, t⟧ -- <-- is this actually useful??
+  
   notation `λ* ` x `, ` t := star_abs x t
 
-  lemma star_eta {x} {t} (h : ¬ is_elem x t) : (λ* x, t◦#x) ≈ t := begin
-    rw [natree.pre.ref, star_abs],
+  lemma star_eta' {x} {t} (h : ¬ is_elem x t) : (λ** x, t◦#x) ≈ t := begin
+    rw star_abs',
     split_ifs,
     refl,
     exfalso,
@@ -302,16 +360,16 @@ namespace chapter4
     assumption,
   end
 
-  lemma star_unchanged {x} {t u} (h : ¬ is_elem x t) : (λ* x, t)◦u ≈ t := begin
+  lemma star_unchanged' {x} {t u} (h : ¬ is_elem x t) : (λ** x, t)◦u ≈ t := begin
     induction t,
     case node {
-      rw star_abs,
+      rw star_abs',
       apply K'_prop,
     },
     case app : t₁ t₂ h₁ h₂ {
       induction t₂,
       case node {
-        rw star_abs,
+        rw star_abs',
         transitivity,
         apply d'_prop,
         apply natree.pre.equiv.congr,
@@ -323,11 +381,11 @@ namespace chapter4
         left,
         assumption,
 
-        rw star_abs,
+        rw star_abs',
         apply K'_prop,
       },
       case app : t₃ t₄ h₃ h₄ {
-        rw star_abs,
+        rw star_abs',
         transitivity,
         apply d'_prop,
         apply natree.pre.equiv.congr,
@@ -346,7 +404,7 @@ namespace chapter4
         right,
         assumption,
       },
-      case nat_ref {
+      case ref {
         symmetry,
         transitivity,
         apply natree.pre.equiv.congr,
@@ -369,7 +427,7 @@ namespace chapter4
 
         symmetry,
 
-        repeat {rw star_abs},
+        repeat {rw star_abs'},
         split_ifs,
 
         exfalso,
@@ -392,21 +450,21 @@ namespace chapter4
         refl,
       },
     },
-    case nat_ref {
-      rw star_abs,
+    case ref {
+      rw star_abs',
       split_ifs,
       apply K'_prop,
     },
   end
 
-  theorem star_beta {x} {t u} : (λ* x, t)◦u ≈ subst' x u t := begin
+  theorem star_beta' {x} {t u} : (λ** x, t)◦u ≈ subst' x u t := begin
     induction t,
     case node {
-      rw [star_abs, subst'],
+      rw [star_abs', subst'],
       apply K'_prop,
     },
-    case nat_ref {
-      rw [star_abs, subst'],
+    case ref {
+      rw [star_abs', subst'],
       split_ifs,
       apply I'_prop,
       apply K'_prop,
@@ -425,26 +483,26 @@ namespace chapter4
 
       induction t₂,
       case node {
-        rw star_abs,
+        rw star_abs',
         transitivity,
         apply d'_prop,
         refl,
       },
       case app {
-        rw star_abs,
+        rw star_abs',
         transitivity,
         apply d'_prop,
         refl,
       },
-      case nat_ref {
+      case ref {
         repeat {
-          rw star_abs,
+          rw star_abs',
         },
         symmetry,
         split_ifs,
 
         apply natree.pre.equiv.congr,
-        apply star_unchanged,
+        apply star_unchanged',
         exact h_1.2,
         apply I'_prop,
 
@@ -462,7 +520,13 @@ namespace chapter4
     },
   end
 
-  def ω : 𝕋 := ⟦λ* 'z', λ* 'f', #'f'◦(#'z'◦#'z'◦#'f')⟧
+  theorem star_beta {x} {t} {u} : (λ* x, t)⬝u = subst x u ⟦t⟧ := begin
+    have h₁ := quotient.exists_rep y, cases h₁ with y' h₁, rw ←h₁,
+  end
+
+  -----------------------------------------------------------------------------------
+
+  def ω : 𝕋 := ⟦λ** 'z', λ** 'f', #'f'◦(#'z'◦#'z'◦#'f')⟧
 
   def Y (f) := ω⬝ω⬝f
   lemma Y_prop {f} : Y f = f⬝(Y f) := begin
@@ -481,20 +545,20 @@ namespace chapter4
 
     transitivity,
     apply natree.pre.equiv.congr,
-    apply star_beta,
+    apply star_beta',
     refl,
 
     transitivity,
-    rw star_abs,
+    rw star_abs',
     rw subst',
 
     transitivity,
     apply natree.pre.equiv.congr_left,
     apply natree.pre.equiv.congr,
 
-    show subst' 'z' ω' (d' (λ* 'f', #'z'◦#'z'◦#'f')) ≈ d' (ω'◦ω'),
+    show subst' 'z' ω' (d' (λ** 'f', #'z'◦#'z'◦#'f')) ≈ d' (ω'◦ω'),
     refl,
-    show subst' 'z' ω' (λ* 'f', #'f') ≈ I',
+    show subst' 'z' ω' (λ** 'f', #'f') ≈ I',
     refl,
 
     transitivity,
@@ -524,12 +588,12 @@ namespace chapter4
   theorem fixpoint_function {f x} : (Y₂ f)⬝x = f⬝x⬝(Y₂ f) := by simp [Y₂, Z, swap, wait1, self_apply, d, D, I, K]
   lemma Y₂_prop {f x} : (Y₂ f)⬝x = f⬝x⬝(Y₂ f) := fixpoint_function
 
-  def plus : 𝕋 := Y₂ ⟦λ* 'm', λ* 'p', ▢◦#'m'◦I'◦(K'◦(λ* 'x', λ* 'n', K'◦(#'p'◦#'x'◦#'n')))⟧
+  def plus : 𝕋 := Y₂ ⟦λ** 'm', λ** 'p', ▢◦#'m'◦I'◦(K'◦(λ** 'x', λ** 'n', K'◦(#'p'◦#'x'◦#'n')))⟧
 
   def t_nil := △
   def t_cons (h t) := △⬝h⬝t
 
-  def t_head := ⟦λ* 'x', (((▢◦#'x')◦(K'◦I'))◦K')⟧
+  def t_head := ⟦λ** 'x', (((▢◦#'x')◦(K'◦I'))◦K')⟧
   lemma head_prop {h t} : t_head⬝(t_cons h t) = h := begin
     rw [t_head, t_cons],
     have h₁ := quotient.exists_rep h, cases h₁ with h' h₁, rw ←h₁,
@@ -538,7 +602,7 @@ namespace chapter4
     repeat {rw ←quot_dist_app},
     apply quotient.sound,
     transitivity,
-    apply star_beta,
+    apply star_beta',
     repeat {rw subst'},
     show (▢◦(▢◦h'◦t')◦(K'◦I')◦K') ≈ h',
     transitivity,
@@ -547,7 +611,7 @@ namespace chapter4
     apply K'_prop,
   end
 
-  def t_tail := ⟦λ* 'x', (((▢◦#'x')◦(K'◦I'))◦(K'◦I'))⟧
+  def t_tail := ⟦λ** 'x', (((▢◦#'x')◦(K'◦I'))◦(K'◦I'))⟧
   lemma tail_prop {h t} : t_tail⬝(t_cons h t) = t := begin
     rw [t_tail, t_cons],
     have h₁ := quotient.exists_rep h, cases h₁ with h' h₁, rw ←h₁,
@@ -556,7 +620,7 @@ namespace chapter4
     repeat {rw ←quot_dist_app},
     apply quotient.sound,
     transitivity,
-    apply star_beta,
+    apply star_beta',
     repeat {rw subst'},
     transitivity,
     apply natree.pre.equiv.congr,
@@ -581,11 +645,13 @@ namespace chapter4
   def t_nil' := ▢
   def t_cons' (h t) := ▢◦h◦t
 
-  def list_map_swap := ⟦(λ* 'x', ▢◦#'x'◦(K'◦(K'◦t_nil')))◦(λ* 'h', λ* 't', λ* 'm', λ* 'f', t_cons' (#'f'◦#'h') (#'m'◦#'f'◦#'t'))⟧
+  def list_map_swap := ⟦(λ** 'x', ▢◦#'x'◦(K'◦(K'◦t_nil')))◦(λ** 'h', λ** 't', λ** 'm', λ** 'f', t_cons' (#'f'◦#'h') (#'m'◦#'f'◦#'t'))⟧
   def list_map := swap (Y₂ list_map_swap)
   lemma list_map_prop_nil {f} : list_map⬝f⬝t_nil = t_nil := begin
-    --??? (we need to stop having to delve under the quotient whenever something is defined using star_abs)
-    sorry
+    --??? (we need to stop having to delve under the quotient whenever something is defined using star_abs')
+    --if a 𝕋' has no free variables, it is a combinator, and can be turned into an expression with no variables at all, which can then be simped
+    rw [list_map, list_map_swap],
+
   end
   lemma list_map_prop_cons {f h t} : list_map⬝f⬝(t_cons h t) = t_cons (f⬝h) (list_map⬝f⬝t) := begin
     --???
